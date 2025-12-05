@@ -1,0 +1,38 @@
+<header class="header">
+    <div class="logo">
+        <i class="fas fa-hospital-alt"></i>
+        <h1>Clinic Queue System</h1>
+    </div>
+    
+    <nav class="nav">
+        <a href="/" class="<%= title === 'Home' ? 'active' : '' %>">
+            <i class="fas fa-home"></i> Home
+        </a>
+        <a href="/queue-status" class="<%= title === 'Live Queue' ? 'active' : '' %>">
+            <i class="fas fa-list-ol"></i> Live Queue
+        </a>
+        <a href="/join-queue" class="<%= title === 'Join Queue' ? 'active' : '' %>">
+            <i class="fas fa-ticket-alt"></i> Join Queue
+        </a>
+        
+        <% if (user) { %>
+            <% if (user.role === 'staff' || user.role === 'admin') { %>
+                <a href="/staff/dashboard" class="<%= title.includes('Staff') ? 'active' : '' %>">
+                    <i class="fas fa-user-md"></i> Staff Dashboard
+                </a>
+            <% } %>
+            <% if (user.role === 'admin') { %>
+                <a href="/admin/dashboard" class="<%= title.includes('Admin') ? 'active' : '' %>">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+            <% } %>
+            <a href="/api/auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout (<%= user.fullName %>)
+            </a>
+        <% } else { %>
+            <a href="/staff/login" class="<%= title === 'Staff Login' ? 'active' : '' %>">
+                <i class="fas fa-user-md"></i> Staff Login
+            </a>
+        <% } %>
+    </nav>
+</header>

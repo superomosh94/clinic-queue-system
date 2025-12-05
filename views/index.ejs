@@ -1,0 +1,521 @@
+<div class="homepage-container">
+    <div class="hero">
+        <h1>Smart Queue System for African Healthcare</h1>
+        <p>
+            Reduce clinic wait times, improve patient experience, and streamline staff workflow 
+            with our digital queue management solution designed specifically for African healthcare facilities.
+        </p>
+        <div class="cta-buttons">
+            <a href="/join-queue" class="btn btn-primary">
+                <i class="fas fa-ticket-alt"></i> Join Queue Now
+            </a>
+            <a href="/queue-status" class="btn btn-secondary">
+                <i class="fas fa-list-ol"></i> View Live Queue
+            </a>
+            <!-- Login button added -->
+            <a href="/login" class="btn btn-accent">
+                <i class="fas fa-sign-in-alt"></i> Staff Login
+            </a>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3>Real-time Updates</h3>
+            <p>Patients see live queue position and estimated wait times on their phones.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h3>Smart Notifications</h3>
+            <p>Get SMS alerts when your turn is approaching. No more waiting in crowded halls.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Analytics Dashboard</h3>
+            <p>Clinic managers get insights into wait times, staff performance, and peak hours.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <h3>Staff Efficiency</h3>
+            <p>Digital tools for staff to manage queues efficiently and serve patients faster.</p>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="patientsServed">0</div>
+            <div class="stat-label">Patients Served</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number" id="avgWaitTime">0</div>
+            <div class="stat-label">Avg Wait Time (min)</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number" id="clinicsUsing">1</div>
+            <div class="stat-label">Clinics Using</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number" id="timeSaved">0</div>
+            <div class="stat-label">Hours Saved</div>
+        </div>
+    </div>
+
+    <div class="how-it-works">
+        <h2><i class="fas fa-qrcode"></i> How It Works</h2>
+        
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Scan QR Code</h3>
+                <p>Patient scans QR code at clinic or clicks join button online.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Get Digital Ticket</h3>
+                <p>Receive ticket number with estimated wait time on your phone.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Wait Anywhere</h3>
+                <p>Monitor queue from anywhere. Get SMS when turn is near.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Get Served</h3>
+                <p>Proceed to counter when notified. Quick and stress-free.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-prompt">
+        <div class="login-content">
+            <h3><i class="fas fa-user-md"></i> Clinic Staff Access</h3>
+            <p>Healthcare professionals can login to manage queues and patient flow.</p>
+            <a href="/login" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Staff Login Portal
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Homepage Container */
+    .homepage-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Hero Section */
+    .hero {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        border-radius: 16px;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+    }
+    
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+        opacity: 0.95;
+    }
+    
+    /* CTA Buttons */
+    .cta-buttons {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+        background: linear-gradient(135deg, #27ae60, #219653);
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #2c3e50;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+        background: #f8f9fa;
+    }
+    
+    .btn-accent {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+        box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+    }
+    
+    .btn-accent:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(155, 89, 182, 0.4);
+        background: linear-gradient(135deg, #8e44ad, #7d3c98);
+    }
+    
+    /* Features Section */
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        border-top: 4px solid #3498db;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #3498db;
+        margin-bottom: 1.5rem;
+        height: 80px;
+        width: 80px;
+        line-height: 80px;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .feature-card h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .feature-card p {
+        color: #7f8c8d;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    /* Stats Section */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #2ecc71;
+        margin-bottom: 0.5rem;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    /* How It Works Section */
+    .how-it-works {
+        background: white;
+        padding: 3rem;
+        border-radius: 16px;
+        margin-bottom: 3rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .how-it-works h2 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-size: 2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .steps-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2.5rem;
+        margin-top: 2rem;
+    }
+    
+    .step {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .step-number {
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        font-weight: bold;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .step h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .step p {
+        color: #7f8c8d;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    /* Login Prompt Section */
+    .login-prompt {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        padding: 3rem;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 3rem;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .login-content {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .login-content h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .login-content p {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .login-content .btn {
+        padding: 1rem 3rem;
+        font-size: 1.2rem;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2.2rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+        }
+        
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+        
+        .features,
+        .stats,
+        .steps-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .how-it-works,
+        .login-prompt {
+            padding: 2rem 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .hero {
+            padding: 3rem 1.5rem;
+        }
+        
+        .hero h1 {
+            font-size: 1.8rem;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 1.2rem;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            height: 70px;
+            width: 70px;
+            line-height: 70px;
+        }
+    }
+</style>
+
+<script>
+    // Animated counters for stats
+    function animateCounter(elementId, targetValue, duration = 2000) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        const start = 0;
+        const increment = targetValue / (duration / 16); // 60fps
+        
+        let current = start;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= targetValue) {
+                current = targetValue;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current).toLocaleString();
+        }, 16);
+    }
+    
+    // Set demo values (in real app, fetch from API)
+    window.addEventListener('DOMContentLoaded', () => {
+        animateCounter('patientsServed', 1247);
+        animateCounter('avgWaitTime', 25);
+        animateCounter('clinicsUsing', 3);
+        animateCounter('timeSaved', 312);
+        
+        // Add smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    });
+    
+    // Add parallax effect to hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero');
+        if (hero) {
+            hero.style.transform = `translateY(${scrolled * 0.1}px)`;
+        }
+    });
+    
+    // Add hover animation to feature cards
+    document.addEventListener('DOMContentLoaded', () => {
+        const featureCards = document.querySelectorAll('.feature-card');
+        featureCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    });
+</script>
