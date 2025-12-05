@@ -23,15 +23,15 @@ class QueueLog {
           logData.served_by
         ]
       );
-      
+
       return result.insertId;
-      
+
     } catch (error) {
       log(`Error creating queue log: ${error.message}`, 'error');
       throw error;
     }
   }
-  
+
   /**
    * Get logs for specific date
    */
@@ -47,15 +47,15 @@ class QueueLog {
          ORDER BY ql.served_time DESC`,
         [date]
       );
-      
+
       return logs;
-      
+
     } catch (error) {
       log(`Error getting logs for date ${date}: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
   /**
    * Get logs within date range
    */
@@ -71,15 +71,58 @@ class QueueLog {
          ORDER BY ql.served_time ASC`,
         [startDate, endDate]
       );
-      
+
       return logs;
-      
+
     } catch (error) {
       log(`Error getting logs for range ${startDate}-${endDate}: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
+  /**
+   * Get summary statistics for date range
+   */
+  static async getSummaryStats(startDate, endDate) {
+    try {
+      const [stats] = await db.execute(
+        `SELECT 
+          COUNT(*) as total_patients,
+          AVG(total_wait_time) as avg_wait_time,
+          MIN(total_wait_time) as min_wait_time,
+          MAX(total_wait_time) as max_wait_time,
+          SUM(CASE WHEN total_wait_time <= 30 THEN 1 ELSE 0 END) as patients_under_30min,
+          SUM(CASE WHEN total_wait_time > 30 AND total_wait_time <= 60 THEN 1 ELSE 0 END) as patients_30_to_60min,
+          SUM(CASE WHEN total_wait_time > 60 THEN 1 ELSE 0 END) as patients_over_60min
+         FROM queue_logs 
+         WHERE served_time BETWEEN ? AND ?`,
+        [startDate, endDate]
+      );
+
+      return stats[0] || {
+        total_patients: 0,
+        avg_wait_time: 0,
+        min_wait_time: 0,
+        max_wait_time: 0,
+        patients_under_30min: 0,
+        patients_30_to_60min: 0,
+        patients_over_60min: 0
+      };
+
+    } catch (error) {
+      log(`Error getting summary stats: ${error.message}`, 'error');
+      return {
+        total_patients: 0,
+        avg_wait_time: 0,
+        min_wait_time: 0,
+        max_wait_time: 0,
+        patients_under_30min: 0,
+        patients_30_to_60min: 0,
+        patients_over_60min: 0
+      };
+    }
+  }
+
   /**
    * Get daily statistics
    */
@@ -100,7 +143,7 @@ class QueueLog {
          GROUP BY DATE(served_time)`,
         [date]
       );
-      
+
       return stats[0] || {
         date: date,
         total_patients: 0,
@@ -111,13 +154,13 @@ class QueueLog {
         patients_30_to_60min: 0,
         patients_over_60min: 0
       };
-      
+
     } catch (error) {
       log(`Error getting daily stats: ${error.message}`, 'error');
       return null;
     }
   }
-  
+
   /**
    * Get hourly statistics for a specific date
    */
@@ -134,7 +177,7 @@ class QueueLog {
          ORDER BY hour`,
         [date]
       );
-      
+
       // Fill in missing hours with zeros
       const hourlyStats = [];
       for (let hour = 8; hour <= 17; hour++) { // Clinic hours 8 AM to 5 PM
@@ -146,15 +189,15 @@ class QueueLog {
           avg_wait_time: hourData ? Math.round(hourData.avg_wait_time) : 0
         });
       }
-      
+
       return hourlyStats;
-      
+
     } catch (error) {
       log(`Error getting hourly stats: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
   /**
    * Get weekly statistics
    */
@@ -162,7 +205,7 @@ class QueueLog {
     try {
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 6);
-      
+
       const [stats] = await db.execute(
         `SELECT 
           DATE(served_time) as date,
@@ -175,15 +218,15 @@ class QueueLog {
          ORDER BY date`,
         [startDate, endDate]
       );
-      
+
       return stats;
-      
+
     } catch (error) {
       log(`Error getting weekly stats: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
   /**
    * Get monthly statistics
    */
@@ -191,7 +234,7 @@ class QueueLog {
     try {
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
       const endDate = new Date(year, month, 0); // Last day of month
-      
+
       const [stats] = await db.execute(
         `SELECT 
           DATE(served_time) as date,
@@ -203,15 +246,15 @@ class QueueLog {
          ORDER BY date`,
         [startDate, endDate]
       );
-      
+
       return stats;
-      
+
     } catch (error) {
       log(`Error getting monthly stats: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
   /**
    * Get staff performance from logs
    */
@@ -233,15 +276,15 @@ class QueueLog {
          ORDER BY patients_served DESC`,
         [startDate, endDate]
       );
-      
+
       return performance;
-      
+
     } catch (error) {
       log(`Error getting staff performance: ${error.message}`, 'error');
       return [];
     }
   }
-  
+
   /**
    * Get overall statistics
    */
@@ -257,7 +300,7 @@ class QueueLog {
           MAX(served_time) as last_record
          FROM queue_logs`
       );
-      
+
       return stats[0] || {
         total_patients_served: 0,
         overall_avg_wait: 0,
@@ -266,13 +309,13 @@ class QueueLog {
         first_record: null,
         last_record: null
       };
-      
+
     } catch (error) {
       log(`Error getting overall stats: ${error.message}`, 'error');
       return null;
     }
   }
-  
+
   /**
    * Clean up old logs
    */
@@ -280,15 +323,15 @@ class QueueLog {
     try {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - daysToKeep);
-      
+
       const [result] = await db.execute(
         'DELETE FROM queue_logs WHERE served_time < ?',
         [cutoff]
       );
-      
+
       log(`Cleaned up ${result.affectedRows} old queue logs`);
       return result.affectedRows;
-      
+
     } catch (error) {
       log(`Error cleaning up queue logs: ${error.message}`, 'error');
       return 0;
