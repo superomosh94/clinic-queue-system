@@ -16,16 +16,25 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 // ===================================
 
-// Security middleware
+// Request logger middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}`);
+  next();
+});
+
+// Security middleware - Relaxed for debugging
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com'],
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
-      imgSrc: ["'self'", "data:", "https:"]
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
     }
-  }
+  },
+  crossOriginEmbedderPolicy: false
 }));
 
 // CORS
@@ -61,13 +70,13 @@ console.log('📂 Loading routes...');
 
 // First, let's define all our routes
 const routes = [
-  { path: '/', file: './routes/index' },
   { path: '/patient', file: './routes/patient' },
   { path: '/staff', file: './routes/staff' },
   { path: '/admin', file: './routes/admin' },
   { path: '/api/auth', file: './routes/api/auth' },
   { path: '/api/queue', file: './routes/api/queue' },
-  { path: '/api/stats', file: './routes/api/stats' }
+  { path: '/api/stats', file: './routes/api/stats' },
+  { path: '/', file: './routes/index' }
 ];
 
 // Load each route with validation
@@ -75,7 +84,7 @@ routes.forEach(route => {
   try {
     console.log(`\n📁 Attempting to load: ${route.file}`);
     const router = require(route.file);
-    
+
     // Validate it's a router
     if (router && typeof router === 'function' && router.name === 'router') {
       app.use(route.path, router);
@@ -88,7 +97,7 @@ routes.forEach(route => {
       console.error(`❌ ${route.file} does not export a router or function`);
       console.log(`   Type: ${typeof router}`);
       console.log(`   Value:`, router);
-      
+
       // Create a fallback router - FIXED: Use 500.ejs instead of 501.ejs
       const fallbackRouter = express.Router();
       fallbackRouter.all('*', (req, res) => {
@@ -102,7 +111,7 @@ routes.forEach(route => {
     }
   } catch (error) {
     console.error(`❌ Failed to load ${route.file}:`, error.message);
-    
+
     // Create a fallback router for missing routes - FIXED: Use 500.ejs
     const fallbackRouter = express.Router();
     fallbackRouter.all('*', (req, res) => {
@@ -119,7 +128,7 @@ routes.forEach(route => {
 
 // Basic home route if index route fails
 app.get('/', (req, res) => {
-  res.render('index', { 
+  res.render('index', {
     pageTitle: 'Clinic Queue System',
     user: req.user || null
   });
@@ -140,9 +149,9 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Error:`, err.message);
   console.error(err.stack);
-  
+
   const statusCode = err.status || 500;
-  
+
   // Use 500.ejs for all server errors (500, 501, 502, etc.)
   res.status(statusCode).render('error/500', {
     pageTitle: statusCode === 404 ? 'Page Not Found' : 'Server Error - Clinic Queue System',
@@ -153,7 +162,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n✅ Server running on http://localhost:${PORT}`);
   console.log(`🏥 Clinic Queue System Ready!`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);

@@ -1,32 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle || 'Clinic Queue System' %></title>
+    <title>
+        <%= title || 'Staff Management' %> | Clinic Queue System
+    </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="icon" href="/favicon.ico">
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .staff-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .staff-table th,
+        .staff-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .staff-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .staff-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #e8f6f3;
+            color: #2ecc71;
+        }
+
+        .status-inactive {
+            background-color: #fef9e7;
+            color: #f39c12;
+        }
+
+        .btn-add {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn-add:hover {
+            background-color: #2980b9;
+        }
+
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            .staff-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <div class="under-development">
-        <div class="dev-container">
-            <div class="dev-icon">??</div>
-            <h1 class="dev-title">Under Development</h1>
-            <p class="dev-message">This feature is currently being developed. We're working hard to bring you the best clinic queue management experience.</p>
-            
-            <div class="page-info">
-                <strong>Page:</strong> <%= pageName || 'Unknown Page' %><br>
-                <strong>Path:</strong> <%= pagePath || '/' %><br>
-                <strong>Status:</strong> In Development<br>
-                <strong>ETA:</strong> Coming Soon
+
+    <!-- Include Sidebar Partial -->
+    <%- include('../partials/sidebar', { path: '/admin/staff' }) %>
+
+        <div class="main-content">
+            <div class="dashboard-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-bars mobile-toggle"
+                        onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
+                    <h2>Staff Management</h2>
+                </div>
+                <a href="#" class="btn-add" onclick="alert('Add Staff Modal would open here')">
+                    <i class="fas fa-plus"></i> Add New Staff
+                </a>
             </div>
-            
-            <p>Thank you for your patience. The system will be available soon.</p>
-            
-            <a href="/" class="home-btn">Return to Home</a>
+
+            <div class="staff-list-container">
+                <% if (typeof staffList !=='undefined' && staffList.length> 0) { %>
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% staffList.forEach(staff=> { %>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div
+                                                style="width: 30px; height: 30px; background: #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                                <%= staff.full_name.charAt(0).toUpperCase() %>
+                                            </div>
+                                            <%= staff.full_name %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <%= staff.username %>
+                                    </td>
+                                    <td><span style="text-transform: capitalize;">
+                                            <%= staff.role %>
+                                        </span></td>
+                                    <td>
+                                        <span
+                                            class="status-badge <%= staff.is_active ? 'status-active' : 'status-inactive' %>">
+                                            <%= staff.is_active ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            style="border: none; background: none; color: #3498db; cursor: pointer;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button
+                                            style="border: none; background: none; color: #e74c3c; cursor: pointer; margin-left: 10px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                        <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
+                            <i class="fas fa-users-slash"
+                                style="font-size: 3rem; color: #bdc3c7; margin-bottom: 20px;"></i>
+                            <h3>No Staff Found</h3>
+                            <p>Get started by adding a new staff member.</p>
+                        </div>
+                        <% } %>
+            </div>
         </div>
-    </div>
-    
-    <script src="/js/main.js"></script>
+
 </body>
+
 </html>

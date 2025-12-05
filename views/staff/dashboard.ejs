@@ -1,987 +1,1166 @@
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <div class="user-welcome">
-            <div class="user-avatar">
-                <i class="fas fa-user-md"></i>
-            </div>
-            <div>
-                <h1 style="color: #2c3e50; margin-bottom: 0.25rem;">
-                    Welcome, <%= user.fullName %>
-                </h1>
-                <p style="color: #7f8c8d;">
-                    <i class="fas fa-id-badge"></i> <%= user.role.toUpperCase() %> 
-                    | <span id="currentTime"><%= new Date().toLocaleTimeString() %></span>
-                </p>
-            </div>
-        </div>
-        
-        <div class="quick-actions">
-            <div class="live-indicator">
-                <div class="pulse"></div>
-                <span>LIVE UPDATES</span>
-            </div>
-            <button onclick="callNextPatient()" class="btn btn-primary">
-                <i class="fas fa-bullhorn"></i> Call Next Patient
-            </button>
-            <a href="/api/auth/logout" class="btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-            <!-- Login button - will only show if not on login page -->
-            <a href="/login" class="btn">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </a>
-        </div>
-    </div>
-    
-    <!-- Rest of your dashboard content remains the same -->
-    <div class="staff-status">
-        <div class="status-indicator"></div>
-        <span style="font-weight: 500;">Status: <span id="staffStatus">Available</span></span>
-        <div style="margin-left: auto;">
-            <button onclick="toggleStatus()" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                <i class="fas fa-toggle-on"></i> Toggle Status
-            </button>
-        </div>
-    </div>
-    
-    <div class="stats-cards">
-        <div class="stat-card waiting">
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-value" id="waitingCount"><%= queueStats.waiting_count %></div>
-            <div class="stat-label">Waiting</div>
-        </div>
-        
-        <div class="stat-card active">
-            <div class="stat-icon">
-                <i class="fas fa-user-md"></i>
-            </div>
-            <div class="stat-value" id="activeCount"><%= queueStats.active_count %></div>
-            <div class="stat-label">In Progress</div>
-        </div>
-        
-        <div class="stat-card served">
-            <div class="stat-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-value" id="servedCount"><%= queueStats.served_count %></div>
-            <div class="stat-label">Served Today</div>
-        </div>
-        
-        <div class="stat-card performance">
-            <div class="stat-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="stat-value" id="avgWait"><%= queueStats.avg_estimated_wait || 15 %></div>
-            <div class="stat-label">Avg Wait (min)</div>
-        </div>
-    </div>
-    
-    <div class="action-buttons">
-        <a href="#" class="action-btn primary" onclick="callNextPatient()">
-            <i class="fas fa-bullhorn"></i>
-            <h3>Call Next Patient</h3>
-            <p>Call the next patient in queue</p>
-        </a>
-        
-        <a href="#" class="action-btn" onclick="markCurrentComplete()">
-            <i class="fas fa-check-circle"></i>
-            <h3>Mark as Served</h3>
-            <p>Complete current patient</p>
-        </a>
-        
-        <a href="#" class="action-btn warning" onclick="markNoShow()">
-            <i class="fas fa-user-slash"></i>
-            <h3>Mark No-Show</h3>
-            <p>Patient not responding</p>
-        </a>
-        
-        <a href="/queue-status" target="_blank" class="action-btn">
-            <i class="fas fa-tv"></i>
-            <h3>Public Display</h3>
-            <p>View public queue screen</p>
-        </a>
-    </div>
-    
-    <div class="dashboard-grid">
-        <div class="dashboard-card">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-clock"></i> Waiting Patients
-                </h2>
-                <span class="badge" style="background: #f39c12; color: white; padding: 0.3rem 0.7rem; border-radius: 20px;">
-                    <%= waitingPatients.length %>
-                </span>
-            </div>
-            
-            <% if (waitingPatients.length > 0) { %>
-                <ul class="patient-list" id="waitingList">
-                    <% waitingPatients.forEach((patient, index) => { %>
-                        <li class="patient-item" data-ticket="<%= patient.ticket_number %>">
-                            <div class="patient-header">
-                                <div class="patient-ticket">
-                                    #<%= index + 1 %> - <%= patient.ticket_number %>
-                                </div>
-                                <div class="patient-status status-waiting">
-                                    WAITING
-                                </div>
-                            </div>
-                            <div class="patient-details">
-                                <div>
-                                    <i class="fas fa-hourglass-half"></i>
-                                    Wait: <%= patient.wait_time || 0 %> min
-                                </div>
-                                <div>
-                                    <i class="fas fa-clock"></i>
-                                    Est: <%= patient.estimated_wait || 15 %> min
-                                </div>
-                            </div>
-                            <div style="margin-top: 0.5rem;">
-                                <button onclick="callSpecificPatient('<%= patient.ticket_number %>')" 
-                                    class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                                    <i class="fas fa-phone"></i> Call Now
-                                </button>
-                            </div>
-                        </li>
-                    <% }) %>
-                </ul>
-            <% } else { %>
-                <div class="empty-state">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>No patients waiting</h3>
-                    <p>All patients are being served</p>
-                </div>
-            <% } %>
-        </div>
-        
-        <div class="dashboard-card">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-user-md"></i> Currently Serving
-                </h2>
-                <span class="badge" style="background: #3498db; color: white; padding: 0.3rem 0.7rem; border-radius: 20px;">
-                    <%= activePatients.length %>
-                </span>
-            </div>
-            
-            <% if (activePatients.length > 0) { %>
-                <ul class="patient-list" id="activeList">
-                    <% activePatients.forEach(patient => { %>
-                        <li class="patient-item active" data-ticket="<%= patient.ticket_number %>">
-                            <div class="patient-header">
-                                <div class="patient-ticket">
-                                    <i class="fas fa-user-md"></i>
-                                    <%= patient.ticket_number %>
-                                </div>
-                                <div class="patient-status status-in-progress">
-                                    IN PROGRESS
-                                </div>
-                            </div>
-                            <div class="patient-details">
-                                <div>
-                                    <i class="fas fa-user"></i>
-                                    <% if (patient.staff_name) { %>
-                                        Staff: <%= patient.staff_name %>
-                                    <% } else { %>
-                                        Staff: You
-                                    <% } %>
-                                </div>
-                                <div>
-                                    <i class="fas fa-clock"></i>
-                                    Service: <%= patient.service_time || 0 %> min
-                                </div>
-                            </div>
-                            <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                                <button onclick="markComplete('<%= patient.ticket_number %>')" 
-                                    class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                                    <i class="fas fa-check"></i> Mark Served
-                                </button>
-                                <button onclick="transferPatient('<%= patient.ticket_number %>')" 
-                                    class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                                    <i class="fas fa-exchange-alt"></i> Transfer
-                                </button>
-                            </div>
-                        </li>
-                    <% }) %>
-                </ul>
-            <% } else { %>
-                <div class="empty-state">
-                    <i class="fas fa-user-md"></i>
-                    <h3>No active patients</h3>
-                    <p>Call next patient to start</p>
-                </div>
-            <% } %>
-        </div>
-    </div>
-    
-    <div class="dashboard-card">
-        <div class="card-header">
-            <h2 class="card-title">
-                <i class="fas fa-chart-bar"></i> Today's Performance
-            </h2>
-            <button onclick="refreshStats()" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
-                <i class="fas fa-sync"></i> Refresh
-            </button>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-            <div>
-                <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
-                    <i class="fas fa-user-clock"></i> Wait Time Analysis
-                </h3>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <span style="color: #7f8c8d;">Average Wait:</span>
-                        <strong style="float: right; color: #2c3e50;">
-                            <%= queueStats.avg_estimated_wait || 15 %> min
-                        </strong>
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <span style="color: #7f8c8d;">Oldest Waiting:</span>
-                        <strong style="float: right; color: #2c3e50;">
-                            <% if (queueStats.oldest_waiting) { %>
-                                <%= Math.floor((new Date() - new Date(queueStats.oldest_waiting)) / 60000) %> min
-                            <% } else { %>
-                                0 min
-                            <% } %>
-                        </strong>
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
-                    <i class="fas fa-users"></i> Active Staff
-                </h3>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                    <% if (activeStaff.length > 0) { %>
-                        <% activeStaff.forEach(staff => { %>
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; padding: 0.5rem; background: white; border-radius: 5px;">
-                                <div style="width: 10px; height: 10px; background: #2ecc71; border-radius: 50%;"></div>
-                                <span><%= staff.full_name %></span>
-                                <span style="margin-left: auto; font-size: 0.8rem; color: #7f8c8d;">
-                                    <%= staff.role %>
-                                </span>
-                            </div>
-                        <% }) %>
-                    <% } else { %>
-                        <p style="color: #95a5a6; text-align: center; padding: 1rem;">
-                            No active staff members
-                        </p>
-                    <% } %>
-                </div>
-            </div>
-            
-            <div>
-                <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
-                    <i class="fas fa-cog"></i> Quick Tools
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <button onclick="sendAnnouncement()" class="btn" style="text-align: left; justify-content: flex-start;">
-                        <i class="fas fa-bullhorn"></i> Send Announcement
-                    </button>
-                    <button onclick="viewClinicSettings()" class="btn" style="text-align: left; justify-content: flex-start;">
-                        <i class="fas fa-hospital"></i> Clinic Settings
-                    </button>
-                    <button onclick="exportTodayData()" class="btn" style="text-align: left; justify-content: flex-start;">
-                        <i class="fas fa-download"></i> Export Today's Data
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
 
-<style>
-    /* Dashboard Base Styles */
-    .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 20px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f5f7fa;
-        min-height: 100vh;
-    }
-    
-    /* Header Styles */
-    .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
-    
-    .user-welcome {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .user-avatar {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #3498db, #2c3e50);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-    }
-    
-    .quick-actions {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    /* Button Styles */
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s ease;
-        text-align: center;
-        justify-content: center;
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-        color: white;
-        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-    }
-    
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #2980b9, #21618c);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
-    }
-    
-    .btn {
-        background: #ecf0f1;
-        color: #2c3e50;
-        border: 1px solid #dce0e2;
-    }
-    
-    .btn:hover {
-        background: #dfe6e9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Staff Status */
-    .staff-status {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.5rem 0;
-        padding: 1rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    .status-indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #2ecc71;
-        animation: pulse 1.5s infinite;
-    }
-    
-    .status-indicator.away { background: #f39c12; }
-    .status-indicator.busy { background: #e74c3c; }
-    
-    .live-indicator {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0.5rem 1rem;
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        color: white;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-    
-    .pulse {
-        width: 10px;
-        height: 10px;
-        background: #2ecc71;
-        border-radius: 50%;
-        animation: pulse 1.5s infinite;
-    }
-    
-    /* Stats Cards */
-    .stats-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
-    }
-    
-    .stat-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-        border-top: 4px solid;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .stat-card.waiting { border-top-color: #f39c12; }
-    .stat-card.active { border-top-color: #3498db; }
-    .stat-card.served { border-top-color: #2ecc71; }
-    .stat-card.performance { border-top-color: #9b59b6; }
-    
-    .stat-icon {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.9;
-    }
-    
-    .stat-card.waiting .stat-icon { color: #f39c12; }
-    .stat-card.active .stat-icon { color: #3498db; }
-    .stat-card.served .stat-icon { color: #2ecc71; }
-    .stat-card.performance .stat-icon { color: #9b59b6; }
-    
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-        color: #2c3e50;
-    }
-    
-    .stat-label {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 600;
-    }
-    
-    /* Action Buttons */
-    .action-buttons {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin: 1.5rem 0;
-    }
-    
-    .action-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-        background: white;
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        color: inherit;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    .action-btn:hover {
-        transform: translateY(-5px);
-        border-color: #3498db;
-        box-shadow: 0 8px 20px rgba(52, 152, 219, 0.2);
-    }
-    
-    .action-btn i {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        color: #3498db;
-    }
-    
-    .action-btn.primary i { color: #2ecc71; }
-    .action-btn.warning i { color: #f39c12; }
-    
-    .action-btn h3 {
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    
-    .action-btn p {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
-    
-    /* Dashboard Grid */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .dashboard-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-    
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .card-title {
-        color: #2c3e50;
-        font-size: 1.2rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    /* Patient Lists */
-    .patient-list {
-        list-style: none;
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-    
-    .patient-list::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .patient-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-    
-    .patient-list::-webkit-scrollbar-thumb {
-        background: #bdc3c7;
-        border-radius: 3px;
-    }
-    
-    .patient-item {
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        border-radius: 8px;
-        background: #f8f9fa;
-        border-left: 4px solid #3498db;
-        transition: all 0.2s ease;
-    }
-    
-    .patient-item:hover {
-        transform: translateX(5px);
-        background: #e9ecef;
-    }
-    
-    .patient-item.active {
-        border-left-color: #2ecc71;
-        background: #e8f6f3;
-    }
-    
-    .patient-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .patient-ticket {
-        font-weight: 700;
-        color: #2c3e50;
-        font-size: 1.1rem;
-    }
-    
-    .patient-status {
-        font-size: 0.8rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 3px;
-        font-weight: 600;
-    }
-    
-    .status-waiting { background: #fef9e7; color: #f39c12; }
-    .status-in-progress { background: #e8f4fc; color: #3498db; }
-    
-    .patient-details {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-        font-size: 0.9rem;
-        color: #7f8c8d;
-    }
-    
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #95a5a6;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    /* Animation */
-    @keyframes pulse {
-        0% { transform: scale(0.95); opacity: 0.7; }
-        50% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(0.95); opacity: 0.7; }
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .dashboard-header {
-            flex-direction: column;
-            align-items: stretch;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | Clinic Queue System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
         }
-        
-        .quick-actions {
-            justify-content: center;
-        }
-        
-        .action-btn {
-            min-width: 100%;
-        }
-        
-        .user-welcome {
-            text-align: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
-        .stats-cards {
-            grid-template-columns: 1fr 1fr;
-        }
-        
-        .action-buttons {
-            grid-template-columns: 1fr;
-        }
-        
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .stats-cards {
-            grid-template-columns: 1fr;
-        }
-        
-        .quick-actions {
-            flex-direction: column;
-            width: 100%;
-        }
-        
-        .quick-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-</style>
 
-<script>
-    // Update current time
-    function updateTime() {
-        document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
-    }
-    setInterval(updateTime, 1000);
-    
-    // Staff status management
-    let staffAvailable = true;
-    function toggleStatus() {
-        staffAvailable = !staffAvailable;
-        const statusElem = document.getElementById('staffStatus');
-        const indicator = document.querySelector('.status-indicator');
-        
-        if (staffAvailable) {
-            statusElem.textContent = 'Available';
-            indicator.className = 'status-indicator';
-            showMessage('Status: Available to receive patients', 'success');
-        } else {
-            statusElem.textContent = 'Away';
-            indicator.className = 'status-indicator away';
-            showMessage('Status: Away - not receiving patients', 'warning');
+        .main-content {
+            margin-left: 260px;
+            /* Width of sidebar */
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
-    }
-    
-    // Queue management functions
-    async function callNextPatient() {
-        try {
-            const response = await fetch('/staff/call-next', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showMessage(`Called patient: ${data.patient.ticket_number}`, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showMessage(data.message || 'Failed to call patient', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Network error. Please try again.', 'error');
-        }
-    }
-    
-    async function callSpecificPatient(ticketNumber) {
-        try {
-            const response = await fetch('/staff/update-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ticketNumber: ticketNumber,
-                    status: 'in-progress'
-                }),
-                credentials: 'include'
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showMessage(`Called patient: ${ticketNumber}`, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showMessage(data.message || 'Failed to call patient', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Network error. Please try again.', 'error');
-        }
-    }
-    
-    async function markComplete(ticketNumber) {
-        try {
-            const response = await fetch('/staff/update-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ticketNumber: ticketNumber,
-                    status: 'served'
-                }),
-                credentials: 'include'
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showMessage(`Patient ${ticketNumber} marked as served`, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showMessage(data.message || 'Failed to update patient', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Network error. Please try again.', 'error');
-        }
-    }
-    
-    async function markCurrentComplete() {
-        const activeItems = document.querySelectorAll('.patient-item.active');
-        if (activeItems.length > 0) {
-            const ticketNumber = activeItems[0].dataset.ticket;
-            await markComplete(ticketNumber);
-        } else {
-            showMessage('No active patient to complete', 'warning');
-        }
-    }
-    
-    async function markNoShow() {
-        const waitingItems = document.querySelectorAll('.patient-item:not(.active)');
-        if (waitingItems.length > 0) {
-            const ticketNumber = waitingItems[0].dataset.ticket;
-            
-            if (confirm(`Mark ${ticketNumber} as no-show?`)) {
-                try {
-                    const response = await fetch(`/api/queue/no-show/${ticketNumber}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include'
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showMessage(`Patient ${ticketNumber} marked as no-show`, 'success');
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        showMessage(data.message || 'Failed to mark as no-show', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showMessage('Network error. Please try again.', 'error');
-                }
-            }
-        } else {
-            showMessage('No waiting patients to mark as no-show', 'warning');
-        }
-    }
-    
-    // Utility functions
-    function showMessage(text, type = 'info') {
-        const message = document.createElement('div');
-        message.className = `message ${type}`;
-        message.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-            color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-            border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
+
+        /* Mobile Toggle */
+        .mobile-header {
+            display: none;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
             align-items: center;
-            gap: 10px;
-            max-width: 400px;
-            animation: slideIn 0.3s ease;
-        `;
-        
-        message.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${text}</span>
-            <button onclick="this.parentElement.remove()" style="
-                background: none;
-                border: none;
-                color: inherit;
-                cursor: pointer;
-                font-size: 1.2rem;
-                margin-left: auto;
-                opacity: 0.7;
-                transition: opacity 0.3s;
-            ">
-                &times;
-            </button>
-        `;
-        
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => message.remove(), 300);
-            }
-        }, 5000);
-    }
-    
-    function refreshStats() {
-        location.reload();
-    }
-    
-    function sendAnnouncement() {
-        const message = prompt('Enter announcement message for waiting patients:');
-        if (message) {
-            showMessage('Announcement sent to waiting patients', 'success');
+            justify-content: space-between;
         }
-    }
-    
-    function viewClinicSettings() {
-        if ('<%= user.role %>' === 'admin') {
-            window.location.href = '/admin/dashboard';
-        } else {
-            showMessage('Admin access required for clinic settings', 'warning');
-        }
-    }
-    
-    function exportTodayData() {
-        showMessage('Exporting today\'s data...', 'info');
-        setTimeout(() => {
-            showMessage('Data exported successfully!', 'success');
-        }, 1500);
-    }
-    
-    function transferPatient(ticketNumber) {
-        showMessage('Transfer feature coming soon', 'info');
-    }
-    
-    // Add CSS animations for messages
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+
+            .mobile-header {
+                display: flex;
             }
         }
-        
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Auto-refresh queue every 30 seconds
-    setInterval(() => {
-        if (document.visibilityState === 'visible') {
-            fetch('/staff/today-summary')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('waitingCount').textContent = 
-                            data.summary.queue.waiting_count;
-                        document.getElementById('activeCount').textContent = 
-                            data.summary.queue.active_count;
-                        document.getElementById('servedCount').textContent = 
-                            data.summary.queue.served_count;
-                        document.getElementById('avgWait').textContent = 
-                            data.summary.queue.avg_estimated_wait || 15;
+    </style>
+</head>
+
+<body>
+
+    <!-- Include Sidebar Partial -->
+    <%- include('../partials/sidebar', { path: '/staff/dashboard' }) %>
+
+        <div class="mobile-header">
+            <div style="font-weight: bold; font-size: 1.2rem;">ClinicQueue</div>
+            <i class="fas fa-bars" onclick="document.querySelector('.sidebar').classList.toggle('active')"
+                style="cursor: pointer; font-size: 1.5rem;"></i>
+        </div>
+
+        <div class="main-content">
+            <!-- Original Content Starts Here -->
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="user-welcome">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div>
+                            <h1 style="color: #2c3e50; margin-bottom: 0.25rem;">
+                                Welcome, <%= user.fullName %>
+                            </h1>
+                            <p style="color: #7f8c8d;">
+                                <i class="fas fa-id-badge"></i>
+                                <%= user.role.toUpperCase() %>
+                                    | <span id="currentTime">
+                                        <%= new Date().toLocaleTimeString() %>
+                                    </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="live-indicator">
+                            <div class="pulse"></div>
+                            <span>LIVE UPDATES</span>
+                        </div>
+                        <button onclick="callNextPatient()" class="btn btn-primary">
+                            <i class="fas fa-bullhorn"></i> Call Next Patient
+                        </button>
+                    </div>
+                </div>
+
+                <div class="staff-status">
+                    <div class="status-indicator"></div>
+                    <span style="font-weight: 500;">Status: <span id="staffStatus">Available</span></span>
+                    <div style="margin-left: auto;">
+                        <button onclick="toggleStatus()" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <i class="fas fa-toggle-on"></i> Toggle Status
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-cards">
+                    <div class="stat-card waiting">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-value" id="waitingCount">
+                            <%= queueStats.waiting_count %>
+                        </div>
+                        <div class="stat-label">Waiting</div>
+                    </div>
+
+                    <div class="stat-card active">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="stat-value" id="activeCount">
+                            <%= queueStats.active_count %>
+                        </div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+
+                    <div class="stat-card served">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value" id="servedCount">
+                            <%= queueStats.served_count %>
+                        </div>
+                        <div class="stat-label">Served Today</div>
+                    </div>
+
+                    <div class="stat-card performance">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value" id="avgWait">
+                            <%= queueStats.avg_estimated_wait || 15 %>
+                        </div>
+                        <div class="stat-label">Avg Wait (min)</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="#" class="action-btn primary" onclick="callNextPatient()">
+                        <i class="fas fa-bullhorn"></i>
+                        <h3>Call Next Patient</h3>
+                        <p>Call the next patient in queue</p>
+                    </a>
+
+                    <a href="#" class="action-btn" onclick="markCurrentComplete()">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Mark as Served</h3>
+                        <p>Complete current patient</p>
+                    </a>
+
+                    <a href="#" class="action-btn warning" onclick="markNoShow()">
+                        <i class="fas fa-user-slash"></i>
+                        <h3>Mark No-Show</h3>
+                        <p>Patient not responding</p>
+                    </a>
+
+                    <a href="/queue-status" target="_blank" class="action-btn">
+                        <i class="fas fa-tv"></i>
+                        <h3>Public Display</h3>
+                        <p>View public queue screen</p>
+                    </a>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-clock"></i> Waiting Patients
+                            </h2>
+                            <span class="badge"
+                                style="background: #f39c12; color: white; padding: 0.3rem 0.7rem; border-radius: 20px;">
+                                <%= waitingPatients.length %>
+                            </span>
+                        </div>
+
+                        <% if (waitingPatients.length> 0) { %>
+                            <ul class="patient-list" id="waitingList">
+                                <% waitingPatients.forEach((patient, index)=> { %>
+                                    <li class="patient-item" data-ticket="<%= patient.ticket_number %>">
+                                        <div class="patient-header">
+                                            <div class="patient-ticket">
+                                                #<%= index + 1 %> - <%= patient.ticket_number %>
+                                            </div>
+                                            <div class="patient-status status-waiting">
+                                                WAITING
+                                            </div>
+                                        </div>
+                                        <div class="patient-details">
+                                            <div>
+                                                <i class="fas fa-hourglass-half"></i>
+                                                Wait: <%= patient.wait_time || 0 %> min
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-clock"></i>
+                                                Est: <%= patient.estimated_wait || 15 %> min
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 0.5rem;">
+                                            <button onclick="callSpecificPatient('<%= patient.ticket_number %>')"
+                                                class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                                <i class="fas fa-phone"></i> Call Now
+                                            </button>
+                                        </div>
+                                    </li>
+                                    <% }) %>
+                            </ul>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle"></i>
+                                    <h3>No patients waiting</h3>
+                                    <p>All patients are being served</p>
+                                </div>
+                                <% } %>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-user-md"></i> Currently Serving
+                            </h2>
+                            <span class="badge"
+                                style="background: #3498db; color: white; padding: 0.3rem 0.7rem; border-radius: 20px;">
+                                <%= activePatients.length %>
+                            </span>
+                        </div>
+
+                        <% if (activePatients.length> 0) { %>
+                            <ul class="patient-list" id="activeList">
+                                <% activePatients.forEach(patient=> { %>
+                                    <li class="patient-item active" data-ticket="<%= patient.ticket_number %>">
+                                        <div class="patient-header">
+                                            <div class="patient-ticket">
+                                                <i class="fas fa-user-md"></i>
+                                                <%= patient.ticket_number %>
+                                            </div>
+                                            <div class="patient-status status-in-progress">
+                                                IN PROGRESS
+                                            </div>
+                                        </div>
+                                        <div class="patient-details">
+                                            <div>
+                                                <i class="fas fa-user"></i>
+                                                <% if (patient.staff_name) { %>
+                                                    Staff: <%= patient.staff_name %>
+                                                        <% } else { %>
+                                                            Staff: You
+                                                            <% } %>
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-clock"></i>
+                                                Service: <%= patient.service_time || 0 %> min
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                                            <button onclick="markComplete('<%= patient.ticket_number %>')"
+                                                class="btn btn-primary"
+                                                style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                                <i class="fas fa-check"></i> Mark Served
+                                            </button>
+                                            <button onclick="transferPatient('<%= patient.ticket_number %>')"
+                                                class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                                <i class="fas fa-exchange-alt"></i> Transfer
+                                            </button>
+                                        </div>
+                                    </li>
+                                    <% }) %>
+                            </ul>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <i class="fas fa-user-md"></i>
+                                    <h3>No active patients</h3>
+                                    <p>Call next patient to start</p>
+                                </div>
+                                <% } %>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-bar"></i> Today's Performance
+                        </h2>
+                        <button onclick="refreshStats()" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <div>
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
+                                <i class="fas fa-user-clock"></i> Wait Time Analysis
+                            </h3>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                                <div style="margin-bottom: 0.5rem;">
+                                    <span style="color: #7f8c8d;">Average Wait:</span>
+                                    <strong style="float: right; color: #2c3e50;">
+                                        <%= queueStats.avg_estimated_wait || 15 %> min
+                                    </strong>
+                                </div>
+                                <div style="margin-bottom: 0.5rem;">
+                                    <span style="color: #7f8c8d;">Oldest Waiting:</span>
+                                    <strong style="float: right; color: #2c3e50;">
+                                        <% if (queueStats.oldest_waiting) { %>
+                                            <%= Math.floor((new Date() - new Date(queueStats.oldest_waiting)) / 60000)
+                                                %> min
+                                                <% } else { %>
+                                                    0 min
+                                                    <% } %>
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
+                                <i class="fas fa-users"></i> Active Staff
+                            </h3>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                                <% if (activeStaff.length> 0) { %>
+                                    <% activeStaff.forEach(staff=> { %>
+                                        <div
+                                            style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; padding: 0.5rem; background: white; border-radius: 5px;">
+                                            <div
+                                                style="width: 10px; height: 10px; background: #2ecc71; border-radius: 50%;">
+                                            </div>
+                                            <span>
+                                                <%= staff.full_name %>
+                                            </span>
+                                            <span style="margin-left: auto; font-size: 0.8rem; color: #7f8c8d;">
+                                                <%= staff.role %>
+                                            </span>
+                                        </div>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <p style="color: #95a5a6; text-align: center; padding: 1rem;">
+                                                    No active staff members
+                                                </p>
+                                                <% } %>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1rem;">
+                                <i class="fas fa-cog"></i> Quick Tools
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <button onclick="sendAnnouncement()" class="btn"
+                                    style="text-align: left; justify-content: flex-start;">
+                                    <i class="fas fa-bullhorn"></i> Send Announcement
+                                </button>
+                                <button onclick="viewClinicSettings()" class="btn"
+                                    style="text-align: left; justify-content: flex-start;">
+                                    <i class="fas fa-hospital"></i> Clinic Settings
+                                </button>
+                                <button onclick="exportTodayData()" class="btn"
+                                    style="text-align: left; justify-content: flex-start;">
+                                    <i class="fas fa-download"></i> Export Today's Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* Dashboard Base Styles */
+                .dashboard-container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+
+                /* Header Styles */
+                .dashboard-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 2rem;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                    background: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+                }
+
+                .user-welcome {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .user-avatar {
+                    width: 60px;
+                    height: 60px;
+                    background: linear-gradient(135deg, #3498db, #2c3e50);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 1.5rem;
+                    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+                }
+
+                .quick-actions {
+                    display: flex;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                }
+
+                /* Button Styles */
+                .btn {
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 600;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                    text-align: center;
+                    justify-content: center;
+                }
+
+                .btn-primary {
+                    background: linear-gradient(135deg, #3498db, #2980b9);
+                    color: white;
+                    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+                }
+
+                .btn-primary:hover {
+                    background: linear-gradient(135deg, #2980b9, #21618c);
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+                }
+
+                .btn {
+                    background: #ecf0f1;
+                    color: #2c3e50;
+                    border: 1px solid #dce0e2;
+                }
+
+                .btn:hover {
+                    background: #dfe6e9;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                /* Staff Status */
+                .staff-status {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    margin: 1.5rem 0;
+                    padding: 1rem;
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                }
+
+                .status-indicator {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: #2ecc71;
+                    animation: pulse 1.5s infinite;
+                }
+
+                .status-indicator.away {
+                    background: #f39c12;
+                }
+
+                .status-indicator.busy {
+                    background: #e74c3c;
+                }
+
+                .live-indicator {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 0.5rem 1rem;
+                    background: linear-gradient(135deg, #2c3e50, #34495e);
+                    color: white;
+                    border-radius: 20px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                }
+
+                .pulse {
+                    width: 10px;
+                    height: 10px;
+                    background: #2ecc71;
+                    border-radius: 50%;
+                    animation: pulse 1.5s infinite;
+                }
+
+                /* Stats Cards */
+                .stats-cards {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 1.5rem;
+                    margin: 2rem 0;
+                }
+
+                .stat-card {
+                    background: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.3s ease;
+                    border-top: 4px solid;
+                }
+
+                .stat-card:hover {
+                    transform: translateY(-5px);
+                }
+
+                .stat-card.waiting {
+                    border-top-color: #f39c12;
+                }
+
+                .stat-card.active {
+                    border-top-color: #3498db;
+                }
+
+                .stat-card.served {
+                    border-top-color: #2ecc71;
+                }
+
+                .stat-card.performance {
+                    border-top-color: #9b59b6;
+                }
+
+                .stat-icon {
+                    font-size: 2.5rem;
+                    margin-bottom: 0.5rem;
+                    opacity: 0.9;
+                }
+
+                .stat-card.waiting .stat-icon {
+                    color: #f39c12;
+                }
+
+                .stat-card.active .stat-icon {
+                    color: #3498db;
+                }
+
+                .stat-card.served .stat-icon {
+                    color: #2ecc71;
+                }
+
+                .stat-card.performance .stat-icon {
+                    color: #9b59b6;
+                }
+
+                .stat-value {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    margin: 0.5rem 0;
+                    color: #2c3e50;
+                }
+
+                .stat-label {
+                    color: #7f8c8d;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-weight: 600;
+                }
+
+                /* Action Buttons */
+                .action-buttons {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 1.5rem;
+                    margin: 1.5rem 0;
+                }
+
+                .action-btn {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 1.5rem;
+                    background: white;
+                    border-radius: 12px;
+                    border: 2px solid #e9ecef;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    text-decoration: none;
+                    color: inherit;
+                    text-align: center;
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                }
+
+                .action-btn:hover {
+                    transform: translateY(-5px);
+                    border-color: #3498db;
+                    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.2);
+                }
+
+                .action-btn i {
+                    font-size: 2.5rem;
+                    margin-bottom: 1rem;
+                    color: #3498db;
+                }
+
+                .action-btn.primary i {
+                    color: #2ecc71;
+                }
+
+                .action-btn.warning i {
+                    color: #f39c12;
+                }
+
+                .action-btn h3 {
+                    color: #2c3e50;
+                    margin-bottom: 0.5rem;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                }
+
+                .action-btn p {
+                    color: #7f8c8d;
+                    font-size: 0.9rem;
+                    line-height: 1.4;
+                }
+
+                /* Dashboard Grid */
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 2rem;
+                    margin-bottom: 2rem;
+                }
+
+                .dashboard-card {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+                }
+
+                .card-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
+                    padding-bottom: 0.75rem;
+                    border-bottom: 2px solid #f0f0f0;
+                }
+
+                .card-title {
+                    color: #2c3e50;
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                /* Patient Lists */
+                .patient-list {
+                    list-style: none;
+                    max-height: 400px;
+                    overflow-y: auto;
+                    padding-right: 10px;
+                }
+
+                .patient-list::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                .patient-list::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 3px;
+                }
+
+                .patient-list::-webkit-scrollbar-thumb {
+                    background: #bdc3c7;
+                    border-radius: 3px;
+                }
+
+                .patient-item {
+                    padding: 1rem;
+                    margin-bottom: 0.75rem;
+                    border-radius: 8px;
+                    background: #f8f9fa;
+                    border-left: 4px solid #3498db;
+                    transition: all 0.2s ease;
+                }
+
+                .patient-item:hover {
+                    transform: translateX(5px);
+                    background: #e9ecef;
+                }
+
+                .patient-item.active {
+                    border-left-color: #2ecc71;
+                    background: #e8f6f3;
+                }
+
+                .patient-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.5rem;
+                }
+
+                .patient-ticket {
+                    font-weight: 700;
+                    color: #2c3e50;
+                    font-size: 1.1rem;
+                }
+
+                .patient-status {
+                    font-size: 0.8rem;
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 3px;
+                    font-weight: 600;
+                }
+
+                .status-waiting {
+                    background: #fef9e7;
+                    color: #f39c12;
+                }
+
+                .status-in-progress {
+                    background: #e8f4fc;
+                    color: #3498db;
+                }
+
+                .patient-details {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.5rem;
+                    font-size: 0.9rem;
+                    color: #7f8c8d;
+                }
+
+                /* Empty State */
+                .empty-state {
+                    text-align: center;
+                    padding: 3rem 1rem;
+                    color: #95a5a6;
+                }
+
+                .empty-state i {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                    opacity: 0.5;
+                }
+
+                /* Animation */
+                @keyframes pulse {
+                    0% {
+                        transform: scale(0.95);
+                        opacity: 0.7;
                     }
-                });
-        }
-    }, 30000);
-</script>
+
+                    50% {
+                        transform: scale(1.1);
+                        opacity: 1;
+                    }
+
+                    100% {
+                        transform: scale(0.95);
+                        opacity: 0.7;
+                    }
+                }
+
+                /* Responsive Design */
+                @media (max-width: 768px) {
+                    .dashboard-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+
+                    .quick-actions {
+                        justify-content: center;
+                    }
+
+                    .action-btn {
+                        min-width: 100%;
+                    }
+
+                    .user-welcome {
+                        text-align: center;
+                        justify-content: center;
+                        flex-direction: column;
+                    }
+
+                    .stats-cards {
+                        grid-template-columns: 1fr 1fr;
+                    }
+
+                    .action-buttons {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .dashboard-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .stats-cards {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .quick-actions {
+                        flex-direction: column;
+                        width: 100%;
+                    }
+
+                    .quick-actions .btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+            </style>
+
+            <script>
+                // Update current time
+                function updateTime() {
+                    document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
+                }
+                setInterval(updateTime, 1000);
+
+                // Staff status management
+                let staffAvailable = true;
+                function toggleStatus() {
+                    staffAvailable = !staffAvailable;
+                    const statusElem = document.getElementById('staffStatus');
+                    const indicator = document.querySelector('.status-indicator');
+
+                    if (staffAvailable) {
+                        statusElem.textContent = 'Available';
+                        indicator.className = 'status-indicator';
+                        showMessage('Status: Available to receive patients', 'success');
+                    } else {
+                        statusElem.textContent = 'Away';
+                        indicator.className = 'status-indicator away';
+                        showMessage('Status: Away - not receiving patients', 'warning');
+                    }
+                }
+
+                // Queue management functions
+                async function callNextPatient() {
+                    try {
+                        const response = await fetch('/staff/call-next', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'include'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showMessage(`Called patient: ${data.patient.ticket_number}`, 'success');
+                            // SSE will handle reload
+                        } else {
+                            showMessage(data.message || 'Failed to call patient', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showMessage('Network error. Please try again.', 'error');
+                    }
+                }
+
+                async function callSpecificPatient(ticketNumber) {
+                    try {
+                        const response = await fetch('/staff/update-status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                ticketNumber: ticketNumber,
+                                status: 'in-progress'
+                            }),
+                            credentials: 'include'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showMessage(`Called patient: ${ticketNumber}`, 'success');
+                            // SSE will handle reload
+                        } else {
+                            showMessage(data.message || 'Failed to call patient', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showMessage('Network error. Please try again.', 'error');
+                    }
+                }
+
+                async function markComplete(ticketNumber) {
+                    try {
+                        const response = await fetch('/staff/update-status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                ticketNumber: ticketNumber,
+                                status: 'served'
+                            }),
+                            credentials: 'include'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showMessage(`Patient ${ticketNumber} marked as served`, 'success');
+                            // SSE will handle reload
+                        } else {
+                            showMessage(data.message || 'Failed to update patient', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showMessage('Network error. Please try again.', 'error');
+                    }
+                }
+
+                async function markCurrentComplete() {
+                    const activeItems = document.querySelectorAll('.patient-item.active');
+                    if (activeItems.length > 0) {
+                        const ticketNumber = activeItems[0].dataset.ticket;
+                        await markComplete(ticketNumber);
+                    } else {
+                        showMessage('No active patient to complete', 'warning');
+                    }
+                }
+
+                async function markNoShow() {
+                    const waitingItems = document.querySelectorAll('.patient-item:not(.active)');
+                    if (waitingItems.length > 0) {
+                        const ticketNumber = waitingItems[0].dataset.ticket;
+
+                        if (confirm(`Mark ${ticketNumber} as no-show?`)) {
+                            try {
+                                const response = await fetch(`/api/queue/no-show/${ticketNumber}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include'
+                                });
+
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    showMessage(`Patient ${ticketNumber} marked as no-show`, 'success');
+                                    // SSE will handle reload
+                                } else {
+                                    showMessage(data.message || 'Failed to mark as no-show', 'error');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                showMessage('Network error. Please try again.', 'error');
+                            }
+                        }
+                    } else {
+                        showMessage('No waiting patients to mark as no-show', 'warning');
+                    }
+                }
+
+                // Utility functions
+                function showMessage(text, type = 'info') {
+                    const message = document.createElement('div');
+                    message.className = `message ${type}`;
+                    message.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+                    color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+                    border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+                    z-index: 10000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    max-width: 400px;
+                    animation: slideIn 0.3s ease;
+                `;
+
+                    message.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${text}</span>
+                    <button onclick="this.parentElement.remove()" style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                        margin-left: auto;
+                        opacity: 0.7;
+                        transition: opacity 0.3s;
+                    ">
+                        &times;
+                    </button>
+                `;
+
+                    document.body.appendChild(message);
+
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.style.animation = 'slideOut 0.3s ease';
+                            setTimeout(() => message.remove(), 300);
+                        }
+                    }, 5000);
+                }
+
+                function refreshStats() {
+                    location.reload();
+                }
+
+                function sendAnnouncement() {
+                    const message = prompt('Enter announcement message for waiting patients:');
+                    if (message) {
+                        showMessage('Announcement sent to waiting patients', 'success');
+                    }
+                }
+
+                function viewClinicSettings() {
+                    if ('<%= user.role %>' === 'admin') {
+                        window.location.href = '/admin/dashboard';
+                    } else {
+                        showMessage('Admin access required for clinic settings', 'warning');
+                    }
+                }
+
+                function exportTodayData() {
+                    showMessage('Exporting today\'s data...', 'info');
+                    setTimeout(() => {
+                        showMessage('Data exported successfully!', 'success');
+                    }, 1500);
+                }
+
+                function transferPatient(ticketNumber) {
+                    showMessage('Transfer feature coming soon', 'info');
+                }
+
+                // Add CSS animations for messages
+                const style = document.createElement('style');
+                style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+                document.head.appendChild(style);
+
+                // Fetch and update dashboard data
+                async function updateDashboardData() {
+                    try {
+                        const response = await fetch('/staff/today-summary');
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Update stats
+                            document.getElementById('waitingCount').textContent = data.summary.queue.waiting_count;
+                            document.getElementById('activeCount').textContent = data.summary.queue.active_count;
+                            document.getElementById('servedCount').textContent = data.summary.queue.served_count;
+                            document.getElementById('avgWait').textContent = data.summary.queue.avg_estimated_wait || 15;
+                        }
+                    } catch (error) {
+                        console.error('Error updating dashboard data:', error);
+                    }
+                }
+
+                // Real-time updates with SSE
+                function initSSE() {
+                    console.log('Initializing SSE connection...');
+                    const evtSource = new EventSource('/staff/queue-sse');
+
+                    evtSource.onopen = function () {
+                        console.log('SSE Connection established');
+                        document.querySelector('.live-indicator').style.opacity = '1';
+                    };
+
+                    evtSource.onmessage = function (event) {
+                        // Heartbeat or generic message
+                    };
+
+                    evtSource.addEventListener('queue-update', function (event) {
+                        console.log('Queue Update received');
+                        updateDashboardData();
+                        // Reload to update lists
+                        setTimeout(() => location.reload(), 500);
+                    });
+
+                    evtSource.addEventListener('patient-called', function (event) {
+                        const data = JSON.parse(event.data);
+                        showMessage(`Patient ${data.ticketNumber} called`, 'info');
+                        setTimeout(() => location.reload(), 500);
+                    });
+
+                    evtSource.addEventListener('patient-served', function (event) {
+                        setTimeout(() => location.reload(), 500);
+                    });
+
+                    evtSource.addEventListener('patient-updated', function (event) {
+                        setTimeout(() => location.reload(), 500);
+                    });
+
+                    evtSource.onerror = function (err) {
+                        console.error("EventSource failed:", err);
+                        document.querySelector('.live-indicator').style.opacity = '0.5';
+                        evtSource.close();
+                        // Try to reconnect after 5 seconds
+                        setTimeout(initSSE, 5000);
+                    };
+                }
+
+                // Initialize SSE
+                initSSE();
+
+                // Fallback polling every 30 seconds
+                setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        updateDashboardData();
+                    }
+                }, 30000);
+            </script>
+        </div>
+</body>
+
+</html>

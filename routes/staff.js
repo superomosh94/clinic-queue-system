@@ -30,12 +30,9 @@ if (staffCheck && staffCheck.requireStaff) {
   };
 }
 
-// Staff login page (public)
+// Staff login page (public) - Redirect to main login
 router.get('/login', (req, res) => {
-  res.render('staff/login', { 
-    title: 'Staff Login',
-    error: null 
-  });
+  res.redirect('/login');
 });
 
 // Apply middleware - but ONLY if they are functions
@@ -70,6 +67,10 @@ if (typeof requireStaff === 'function') {
 
 // Staff dashboard
 router.get('/dashboard', StaffController.dashboard);
+
+// Staff views
+router.get('/queue', StaffController.queueList);
+router.get('/history', StaffController.history);
 
 // Queue management
 router.post('/call-next', StaffController.callNextPatient);

@@ -4,12 +4,9 @@ const AdminController = require('../controllers/adminController');
 const { authenticateJWT } = require('../middleware/auth');
 const requireAdmin = require('../middleware/adminCheck');
 
-// Admin login page (public)
+// Admin login page (public) - Redirect to main login
 router.get('/login', (req, res) => {
-  res.render('admin/login', { 
-    title: 'Admin Login',
-    error: null 
-  });
+  res.redirect('/login');
 });
 
 // Protected admin routes
@@ -26,6 +23,7 @@ router.put('/staff/:id', AdminController.updateStaff);
 router.delete('/staff/:id', AdminController.deleteStaff);
 
 // Clinic settings
+router.get('/settings', AdminController.settingsPage);
 router.put('/settings', AdminController.updateClinicSettings);
 
 // Reports and analytics

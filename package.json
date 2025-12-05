@@ -13,11 +13,20 @@
     "db:seed": "mysql -u root -p clinic_queue < database/seeds.sql",
     "db:reset": "npm run db:create && npm run db:seed"
   },
-  "keywords": ["queue", "clinic", "healthcare", "africa", "digital", "management"],
+  "keywords": [
+    "queue",
+    "clinic",
+    "healthcare",
+    "africa",
+    "digital",
+    "management"
+  ],
   "author": "Hackathon Team",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,14 +37,13 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.10.0",
     "morgan": "^1.10.0",
-    "compression": "^1.7.4",
+    "mysql2": "^3.10.0",
     "rate-limiter-flexible": "^4.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
     "jest": "^29.5.0",
+    "nodemon": "^3.1.0",
     "supertest": "^6.3.3"
   }
 }

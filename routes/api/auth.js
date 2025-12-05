@@ -1,48 +1,48 @@
 const express = require('express');
 const router = express.Router();
-const AuthController = require('../../controllers/authController');
-const { authenticateJWT } = require('../../middleware/auth');
 
+console.log('📄 Loading auth.js routes...');
 
+try {
+  const AuthController = require('../../controllers/authController');
+  console.log('✅ AuthController loaded successfully');
+  console.log('🔍 AuthController.login type:', typeof AuthController.login);
 
-// ========== PUBLIC ROUTES ==========
+  // POST /api/auth/login
+  router.post('/login', (req, res) => {
+    console.log('🔄 /api/auth/login route called');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    AuthController.login(req, res);
+  });
 
-// Login page
-router.get('/login', (req, res) => {
-  if (req.user) {
-    return res.redirect('/dashboard');
-  }
-  res.render('auth/login');
-});
+  // GET /api/auth/logout
+  router.get('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.redirect('/login');
+  });
 
-// API Login
-router.post('/api/login', AuthController.login);
+} catch (error) {
+  console.error('❌ Failed to load AuthController:', error.message);
+  console.error(error.stack);
 
-// Logout redirect
-router.get('/logout', (req, res) => {
-  res.redirect('/api/logout');
-});
+  // Create a fallback route for debugging
+  router.post('/login', (req, res) => {
+    console.log('⚠️  Using fallback login route');
+    res.json({
+      success: false,
+      message: 'AuthController failed to load: ' + error.message
+    });
+  });
+}
 
-// ========== PROTECTED ROUTES (require auth) ==========
-
-// Apply authentication middleware to all following routes
-router.use(authenticateJWT);
-
-// Dashboard page
-router.get('/dashboard', (req, res) => {
-  res.render('dashboard/index', {
-    pageTitle: 'Dashboard',
-    user: req.user
+// GET /api/auth/check
+router.get('/check', (req, res) => {
+  res.json({
+    success: true,
+    authenticated: false,
+    message: 'API is working'
   });
 });
-
-// API Logout
-router.post('/api/logout', AuthController.logout);
-
-// Other API endpoints
-router.get('/api/profile', AuthController.getProfile);
-router.post('/api/change-password', AuthController.changePassword);
-router.post('/api/refresh', AuthController.refreshToken);
-router.get('/api/check', AuthController.checkAuth);
 
 module.exports = router;

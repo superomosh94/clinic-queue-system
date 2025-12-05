@@ -1,41 +1,50 @@
 <style>
+    body {
+        background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
+        min-height: 100vh;
+    }
+
     .login-container {
         max-width: 400px;
         margin: 0 auto;
         padding: 2rem 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    
+
     .login-card {
         background: white;
         border-radius: 15px;
         padding: 2.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         text-align: center;
         border-top: 5px solid #9b59b6;
     }
-    
+
     .login-icon {
         font-size: 4rem;
         color: #9b59b6;
         margin-bottom: 1.5rem;
     }
-    
+
     .login-card h1 {
         color: #2c3e50;
         margin-bottom: 0.5rem;
         font-family: 'Poppins', sans-serif;
     }
-    
+
     .login-subtitle {
         color: #7f8c8d;
         margin-bottom: 2rem;
     }
-    
+
     .form-group {
         margin-bottom: 1.5rem;
         text-align: left;
     }
-    
+
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
@@ -45,7 +54,7 @@
         align-items: center;
         gap: 8px;
     }
-    
+
     .form-control {
         width: 100%;
         padding: 0.8rem 1rem;
@@ -54,17 +63,17 @@
         font-size: 1rem;
         transition: all 0.3s;
     }
-    
+
     .form-control:focus {
         outline: none;
         border-color: #9b59b6;
         box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.2);
     }
-    
+
     .password-container {
         position: relative;
     }
-    
+
     .toggle-password {
         position: absolute;
         right: 10px;
@@ -76,7 +85,7 @@
         cursor: pointer;
         font-size: 1.2rem;
     }
-    
+
     .admin-warning {
         background: #fef9e7;
         border-left: 4px solid #f39c12;
@@ -85,12 +94,12 @@
         margin: 1.5rem 0;
         text-align: left;
     }
-    
+
     .admin-warning i {
         color: #f39c12;
         margin-right: 8px;
     }
-    
+
     .demo-accounts {
         margin-top: 2rem;
         padding: 1.5rem;
@@ -98,28 +107,28 @@
         border-radius: 10px;
         text-align: left;
     }
-    
+
     .demo-accounts h3 {
         color: #2c3e50;
         margin-bottom: 1rem;
         font-size: 1rem;
     }
-    
+
     .account-list {
         list-style: none;
     }
-    
+
     .account-list li {
         padding: 0.5rem;
         border-bottom: 1px solid #e9ecef;
         display: flex;
         justify-content: space-between;
     }
-    
+
     .account-list li:last-child {
         border-bottom: none;
     }
-    
+
     .account-role {
         font-size: 0.8rem;
         background: #9b59b6;
@@ -127,12 +136,12 @@
         padding: 0.2rem 0.5rem;
         border-radius: 3px;
     }
-    
+
     @media (max-width: 768px) {
         .login-card {
             padding: 1.5rem;
         }
-        
+
         .login-icon {
             font-size: 3rem;
         }
@@ -144,86 +153,73 @@
         <div class="login-icon">
             <i class="fas fa-user-shield"></i>
         </div>
-        
+
         <h1>Admin Login</h1>
         <p class="login-subtitle">
             Access the clinic administration dashboard
         </p>
-        
+
         <% if (error) { %>
             <div class="message error" style="margin-bottom: 1.5rem;">
-                <i class="fas fa-exclamation-circle"></i> <%= error %>
+                <i class="fas fa-exclamation-circle"></i>
+                <%= error %>
             </div>
-        <% } %>
-        
-        <div class="admin-warning">
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>Restricted Access:</strong> This area is for authorized administrators only.
-        </div>
-        
-        <form action="/api/auth/login" method="POST" id="loginForm">
-            <div class="form-group">
-                <label for="username">
-                    <i class="fas fa-user"></i> Username
-                </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    class="form-control" 
-                    placeholder="Enter admin username"
-                    required
-                    autocomplete="username"
-                >
-            </div>
-            
-            <div class="form-group">
-                <label for="password">
-                    <i class="fas fa-lock"></i> Password
-                </label>
-                <div class="password-container">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        class="form-control" 
-                        placeholder="Enter admin password"
-                        required
-                        autocomplete="current-password"
-                    >
-                    <button type="button" class="toggle-password" onclick="togglePassword()">
-                        <i class="fas fa-eye"></i>
-                    </button>
+            <% } %>
+
+                <div class="admin-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Restricted Access:</strong> This area is for authorized administrators only.
                 </div>
-            </div>
-            
-            <button type="submit" class="btn" style="width: 100%; padding: 1rem; background: #9b59b6;">
-                <i class="fas fa-sign-in-alt"></i> Login as Admin
-            </button>
-        </form>
-        
-        <div class="demo-accounts">
-            <h3><i class="fas fa-vial"></i> Demo Admin Account</h3>
-            <ul class="account-list">
-                <li>
-                    <span>Username: <strong>admin</strong></span>
-                    <span class="account-role">Administrator</span>
-                </li>
-                <li>
-                    <span>Password: <strong>password123</strong></span>
-                </li>
-                <li>
-                    <span>Full Name: <strong>Dr. Amina Mohamed</strong></span>
-                </li>
-            </ul>
-        </div>
-        
-        <div style="margin-top: 1.5rem; color: #7f8c8d; font-size: 0.9rem;">
-            <i class="fas fa-shield-alt"></i>
-            All actions are logged for security and audit purposes
-        </div>
+
+                <form action="/api/auth/login" method="POST" id="loginForm">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i> Username
+                        </label>
+                        <input type="text" id="username" name="username" class="form-control"
+                            placeholder="Enter admin username" required autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="password-container">
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Enter admin password" required autocomplete="current-password">
+                            <button type="button" class="toggle-password" onclick="togglePassword()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" style="width: 100%; padding: 1rem; background: #9b59b6;">
+                        <i class="fas fa-sign-in-alt"></i> Login as Admin
+                    </button>
+                </form>
+
+                <div class="demo-accounts">
+                    <h3><i class="fas fa-vial"></i> Demo Admin Account</h3>
+                    <ul class="account-list">
+                        <li>
+                            <span>Username: <strong>admin</strong></span>
+                            <span class="account-role">Administrator</span>
+                        </li>
+                        <li>
+                            <span>Password: <strong>password123</strong></span>
+                        </li>
+                        <li>
+                            <span>Full Name: <strong>Dr. Amina Mohamed</strong></span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 1.5rem; color: #7f8c8d; font-size: 0.9rem;">
+                    <i class="fas fa-shield-alt"></i>
+                    All actions are logged for security and audit purposes
+                </div>
     </div>
-    
+
     <div style="text-align: center; margin-top: 2rem; color: #7f8c8d;">
         <a href="/staff/login" style="color: #3498db; text-decoration: none;">
             <i class="fas fa-user-md"></i> Staff Login
@@ -239,7 +235,7 @@
     function togglePassword() {
         const passwordInput = document.getElementById('password');
         const toggleIcon = document.querySelector('.toggle-password i');
-        
+
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             toggleIcon.className = 'fas fa-eye-slash';
@@ -248,18 +244,18 @@
             toggleIcon.className = 'fas fa-eye';
         }
     }
-    
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        
+
         const formData = new FormData(this);
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
-        
+
         // Show loading state
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
         submitBtn.disabled = true;
-        
+
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -271,9 +267,9 @@
                     password: formData.get('password')
                 })
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 if (data.user.role === 'admin') {
                     window.location.href = '/admin/dashboard';
@@ -294,7 +290,7 @@
             submitBtn.disabled = false;
         }
     });
-    
+
     // Auto-fill demo admin account for hackathon convenience
     document.addEventListener('DOMContentLoaded', () => {
         // Only auto-fill in development/demo environment

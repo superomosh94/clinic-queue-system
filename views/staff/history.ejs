@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports | Clinic Queue System</title>
+    <title>History | Clinic Queue System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -53,19 +53,19 @@
 </head>
 
 <body>
-    <%- include('../partials/sidebar', { path: '/admin/reports' }) %>
+    <%- include('../partials/sidebar', { path: '/staff/history' }) %>
         <div class="main-content">
             <div class="dashboard-header">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <i class="fas fa-bars mobile-toggle"
                         onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
-                    <h2>Reports & Analytics</h2>
+                    <h2>Patient History</h2>
                 </div>
             </div>
             <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                <i class="fas fa-chart-pie" style="font-size: 3rem; color: #3498db; margin-bottom: 20px;"></i>
-                <h3>Reports Coming Soon</h3>
-                <p>Detailed analytics and reporting features are under development.</p>
+                <i class="fas fa-history" style="font-size: 3rem; color: #3498db; margin-bottom: 20px;"></i>
+                <h3>History View</h3>
+                <p>Patient service history will be displayed here.</p>
             </div>
         </div>
 </body>

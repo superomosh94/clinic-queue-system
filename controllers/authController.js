@@ -1,5 +1,31 @@
-// authController.js - Simplified Version
-const bcrypt = require('bcrypt');
+// authController.js - WITH DEBUG LOGGING
+console.log('=== AUTH CONTROLLER LOADING ===');
+
+try {
+  const bcrypt = require('bcryptjs');
+  console.log('✅ bcryptjs loaded successfully');
+} catch (error) {
+  console.error('❌ bcryptjs error:', error.message);
+  console.error(error.stack);
+}
+
+try {
+  const db = require('../config/db');
+  console.log('✅ Database module loaded');
+} catch (error) {
+  console.error('❌ Database error:', error.message);
+}
+
+try {
+  const authMiddleware = require('../middleware/auth');
+  console.log('✅ Auth middleware loaded');
+} catch (error) {
+  console.error('❌ Middleware error:', error.message);
+}
+
+console.log('=== AUTH CONTROLLER READY ===\n');
+
+const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const { 
   generateToken, 
@@ -10,28 +36,35 @@ const {
 const { log } = require('../utils/helpers');
 
 class AuthController {
-  /**
-   * Staff login - Single login page for all users
-   */
   async login(req, res) {
+    console.log('\n=== LOGIN ATTEMPT ===');
+    console.log('Request body:', req.body);
+    console.log('Headers:', req.headers['content-type']);
+    
     try {
       const { username, password } = req.body;
       
-      // Validate input
+      console.log('🔐 Username:', username);
+      console.log('🔑 Password length:', password ? password.length : 0);
+      
       if (!username || !password) {
+        console.log('❌ Missing credentials');
         return res.status(400).json({
           success: false,
           message: 'Username and password are required'
         });
       }
       
-      // Find staff by username
+      console.log('📊 Querying database for user:', username);
       const [staffRows] = await db.execute(
         'SELECT * FROM staff WHERE username = ? AND is_active = TRUE',
         [username]
       );
       
+      console.log('📈 Database returned', staffRows.length, 'rows');
+      
       if (staffRows.length === 0) {
+        console.log('❌ User not found in database');
         return res.status(401).json({
           success: false,
           message: 'Invalid username or password'
@@ -39,17 +72,24 @@ class AuthController {
       }
       
       const staff = staffRows[0];
+      console.log('✅ User found:', staff.username);
+      console.log('📝 Password hash (first 30 chars):', staff.password_hash.substring(0, 30) + '...');
       
-      // Verify password
+      console.log('🔍 Comparing password with bcryptjs...');
       const isValidPassword = await bcrypt.compare(password, staff.password_hash);
+      console.log('🔑 Password comparison result:', isValidPassword);
+      
       if (!isValidPassword) {
+        console.log('❌ Password does not match');
         return res.status(401).json({
           success: false,
           message: 'Invalid username or password'
         });
       }
       
-      // Generate JWT token
+      console.log('✅ Password verified successfully');
+      
+      console.log('🎫 Generating JWT token...');
       const token = generateToken({
         id: staff.id,
         username: staff.username,
@@ -57,232 +97,38 @@ class AuthController {
         full_name: staff.full_name
       });
       
-      // Set token as HTTP-only cookie
+      console.log('🍪 Setting cookie...');
       setTokenCookie(res, token);
       
-      log(`Staff login successful: ${username} (${staff.role})`);
-      
-      // Redirect based on role or send success response
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        // API request - return JSON
-        res.json({
-          success: true,
-          message: 'Login successful',
-          redirectTo: '/dashboard', // All roles go to dashboard
-          user: {
-            id: staff.id,
-            username: staff.username,
-            fullName: staff.full_name,
-            role: staff.role
-          }
-        });
-      } else {
-        // Form submission - redirect to dashboard
-        res.redirect('/dashboard');
-      }
-      
-    } catch (error) {
-      log(`Login error: ${error.message}`, 'error');
-      res.status(500).json({
-        success: false,
-        message: 'Server error during login'
-      });
-    }
-  }
-  
-  /**
-   * Staff logout
-   */
-  async logout(req, res) {
-    try {
-      // Get token from cookie
-      const token = req.cookies.clinic_token || 
-                   req.cookies.auth_token ||
-                   req.headers.authorization?.replace('Bearer ', '');
-      
-      if (token) {
-        // Add token to blacklist
-        await blacklistToken(token);
-      }
-      
-      // Clear cookie
-      clearTokenCookie(res);
-      
-      log(`User logged out`);
-      
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        // API request - return JSON
-        res.json({
-          success: true,
-          message: 'Logout successful',
-          redirectTo: '/login'
-        });
-      } else {
-        // Browser request - redirect to login
-        res.redirect('/login');
-      }
-      
-    } catch (error) {
-      log(`Logout error: ${error.message}`, 'error');
-      res.clearCookie('clinic_token');
-      res.clearCookie('auth_token');
-      res.redirect('/login');
-    }
-  }
-  
-  /**
-   * Get current user profile
-   */
-  async getProfile(req, res) {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Not authenticated'
-        });
-      }
-      
-      // Get fresh user data from database
-      const [staffRows] = await db.execute(
-        'SELECT id, username, full_name, role, phone, email, created_at FROM staff WHERE id = ?',
-        [req.user.id]
-      );
-      
-      if (staffRows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found'
-        });
-      }
-      
-      const staff = staffRows[0];
-      
+      console.log('📤 Sending success response...');
       res.json({
         success: true,
+        message: 'Login successful',
+        redirectTo: '/dashboard',
         user: {
           id: staff.id,
           username: staff.username,
           fullName: staff.full_name,
-          role: staff.role,
-          phone: staff.phone,
-          email: staff.email,
-          createdAt: staff.created_at
+          role: staff.role
         }
       });
       
+      console.log('✅ Login completed successfully\n');
+      
     } catch (error) {
-      log(`Get profile error: ${error.message}`, 'error');
+      console.error('❌ LOGIN ERROR:');
+      console.error('Message:', error.message);
+      console.error('Stack:', error.stack);
+      console.error('Error type:', error.constructor.name);
+      
       res.status(500).json({
         success: false,
-        message: 'Server error'
+        message: 'Server error: ' + error.message
       });
     }
   }
   
-  /**
-   * Change password
-   */
-  async changePassword(req, res) {
-    try {
-      const { currentPassword, newPassword } = req.body;
-      const userId = req.user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message: 'Not authenticated'
-        });
-      }
-      
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Current password and new password are required'
-        });
-      }
-      
-      if (newPassword.length < 6) {
-        return res.status(400).json({
-          success: false,
-          message: 'New password must be at least 6 characters long'
-        });
-      }
-      
-      // Get staff and verify current password
-      const [staffRows] = await db.execute(
-        'SELECT password_hash FROM staff WHERE id = ?',
-        [userId]
-      );
-      
-      if (staffRows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found'
-        });
-      }
-      
-      const staff = staffRows[0];
-      const isValid = await bcrypt.compare(currentPassword, staff.password_hash);
-      
-      if (!isValid) {
-        return res.status(400).json({
-          success: false,
-          message: 'Current password is incorrect'
-        });
-      }
-      
-      // Hash new password
-      const saltRounds = 12;
-      const newHash = await bcrypt.hash(newPassword, saltRounds);
-      
-      // Update password
-      await db.execute(
-        'UPDATE staff SET password_hash = ?, updated_at = NOW() WHERE id = ?',
-        [newHash, userId]
-      );
-      
-      log(`Password changed for user ID: ${userId}`);
-      
-      res.json({
-        success: true,
-        message: 'Password changed successfully'
-      });
-      
-    } catch (error) {
-      log(`Change password error: ${error.message}`, 'error');
-      res.status(500).json({
-        success: false,
-        message: 'Server error'
-      });
-    }
-  }
-  
-  /**
-   * Check authentication status
-   */
-  async checkAuth(req, res) {
-    try {
-      if (!req.user) {
-        return res.json({
-          success: true,
-          authenticated: false
-        });
-      }
-      
-      res.json({
-        success: true,
-        authenticated: true,
-        user: req.user
-      });
-      
-    } catch (error) {
-      log(`Check auth error: ${error.message}`, 'error');
-      res.status(500).json({
-        success: false,
-        message: 'Server error'
-      });
-    }
-  }
+  // ... rest of your methods
 }
 
 module.exports = new AuthController();

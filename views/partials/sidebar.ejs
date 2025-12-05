@@ -1,0 +1,219 @@
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital-user"></i>
+            <span>ClinicQueue</span>
+        </div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="user-info">
+            <div class="user-name">
+                <%= user ? user.fullName : 'User' %>
+            </div>
+            <div class="user-role">
+                <%= user ? user.role : 'Guest' %>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul>
+            <% if (user && user.role==='admin' ) { %>
+                <li>
+                    <a href="/admin/dashboard" class="<%= path === '/admin/dashboard' ? 'active' : '' %>">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/staff" class="<%= path === '/admin/staff' ? 'active' : '' %>">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Staff Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/reports" class="<%= path === '/admin/reports' ? 'active' : '' %>">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/settings" class="<%= path === '/admin/settings' ? 'active' : '' %>">
+                        <i class="fas fa-cogs"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <% } else if (user && user.role==='staff' ) { %>
+                    <li>
+                        <a href="/staff/dashboard" class="<%= path === '/staff/dashboard' ? 'active' : '' %>">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/staff/queue" class="<%= path === '/staff/queue' ? 'active' : '' %>">
+                            <i class="fas fa-list-ol"></i>
+                            <span>Queue List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/staff/history" class="<%= path === '/staff/history' ? 'active' : '' %>">
+                            <i class="fas fa-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <% } %>
+
+                        <li class="nav-divider"></li>
+
+                        <li>
+                            <a href="/profile">
+                                <i class="fas fa-user-cog"></i>
+                                <span>My Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/api/auth/logout" class="logout-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+    /* Sidebar Styles */
+    .sidebar {
+        width: 260px;
+        background: #2c3e50;
+        color: #ecf0f1;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        background: #243342;
+        border-bottom: 1px solid #34495e;
+    }
+
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2ecc71;
+    }
+
+    .sidebar-user {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-bottom: 1px solid #34495e;
+        background: #2c3e50;
+    }
+
+    .sidebar-user .user-avatar {
+        font-size: 2.5rem;
+        color: #bdc3c7;
+    }
+
+    .sidebar-user .user-info .user-name {
+        font-weight: 600;
+        font-size: 1rem;
+        color: white;
+    }
+
+    .sidebar-user .user-info .user-role {
+        font-size: 0.8rem;
+        color: #95a5a6;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 0;
+    }
+
+    .sidebar-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-nav li a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 20px;
+        color: #bdc3c7;
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 4px solid transparent;
+    }
+
+    .sidebar-nav li a:hover,
+    .sidebar-nav li a.active {
+        background: #34495e;
+        color: white;
+        border-left-color: #3498db;
+    }
+
+    .sidebar-nav li a i {
+        width: 20px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
+    .nav-divider {
+        height: 1px;
+        background: #34495e;
+        margin: 10px 20px;
+    }
+
+    .logout-link:hover {
+        background: #c0392b !important;
+        border-left-color: #e74c3c !important;
+    }
+
+    /* Scrollbar for sidebar */
+    .sidebar-nav::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: #2c3e50;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: #34495e;
+        border-radius: 3px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+    }
+</style>
