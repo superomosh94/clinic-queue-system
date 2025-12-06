@@ -132,21 +132,6 @@
                 <input type="password" id="password" name="password" placeholder="Enter your password" required>
             </div>
 
-            <button type="submit" class="btn-login" id="loginBtn">
-                Login
-            </button>
-        </form>
-
-        <div class="login-footer">
-            <p>Use your staff credentials to login</p>
-            <p>Default password: <strong>password123</strong></p>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
@@ -161,61 +146,61 @@
             loginBtn.textContent = 'Logging in...';
 
             try {
-                console.log('Attempting login for:', username);
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+            console.log('Attempting login for:', username);
+            const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password })
+            });
 
-                console.log('Response status:', response.status);
+            console.log('Response status:', response.status);
 
-                // Check if response is JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json();
-                    console.log('Response data:', data);
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+            const data = await response.json();
+            console.log('Response data:', data);
 
-                    if (data.success) {
-                        // Redirect based on role
-                        if (data.user && data.user.role === 'admin') {
-                            window.location.href = '/admin/dashboard';
-                        } else {
-                            window.location.href = '/staff/dashboard';
-                        }
-                    } else {
-                        // Show error from server
-                        errorDiv.textContent = data.message || 'Login failed';
-                        errorDiv.classList.add('show');
-                        loginBtn.disabled = false;
-                        loginBtn.textContent = 'Login';
-                    }
-                } else {
-                    // Non-JSON response (likely HTML error page)
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    errorDiv.textContent = `Server error (${response.status}): Please check console for details.`;
-                    errorDiv.classList.add('show');
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Login';
-                }
+            if (data.success) {
+            // Redirect based on role
+            if (data.user && data.user.role === 'admin') {
+            window.location.href = '/admin/dashboard';
+            } else {
+            window.location.href = '/staff/dashboard';
+            }
+            } else {
+            // Show error from server
+            errorDiv.textContent = data.message || 'Login failed';
+            errorDiv.classList.add('show');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+            }
+            } else {
+            // Non-JSON response (likely HTML error page)
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            errorDiv.textContent = `Server error (${response.status}): Please check console for details.`;
+            errorDiv.classList.add('show');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+            }
 
             } catch (error) {
-                console.error('Login fetch error:', error);
-                errorDiv.textContent = 'Network error: ' + error.message;
-                errorDiv.classList.add('show');
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
+            console.error('Login fetch error:', error);
+            errorDiv.textContent = 'Network error: ' + error.message;
+            errorDiv.classList.add('show');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
             }
-        });
+            });
 
-        // Also support traditional form submission (fallback)
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            // Also support traditional form submission (fallback)
+            document.getElementById('loginForm').addEventListener('submit', function (e) {
             // If JavaScript fails, let the form submit normally
-        });
-    </script>
+            });
+            </script>
 </body>
 
 </html>
