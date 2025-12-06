@@ -3,33 +3,33 @@
         max-width: 500px;
         margin: 0 auto;
     }
-    
+
     .join-card {
         background: white;
         border-radius: 12px;
         padding: 2.5rem;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         text-align: center;
     }
-    
+
     .join-icon {
         font-size: 4rem;
         color: #2ecc71;
         margin-bottom: 1.5rem;
     }
-    
+
     .join-card h1 {
         color: #2c3e50;
         margin-bottom: 1rem;
         font-family: 'Poppins', sans-serif;
     }
-    
+
     .join-card p {
         color: #7f8c8d;
         margin-bottom: 2rem;
         line-height: 1.6;
     }
-    
+
     .next-ticket {
         background: #f8f9fa;
         border: 2px dashed #3498db;
@@ -37,12 +37,12 @@
         padding: 1.5rem;
         margin-bottom: 2rem;
     }
-    
+
     .next-ticket h3 {
         color: #3498db;
         margin-bottom: 0.5rem;
     }
-    
+
     .ticket-number {
         font-size: 2.5rem;
         font-weight: 700;
@@ -50,19 +50,19 @@
         letter-spacing: 2px;
         margin: 0.5rem 0;
     }
-    
+
     .form-group {
         margin-bottom: 1.5rem;
         text-align: left;
     }
-    
+
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
         color: #2c3e50;
         font-weight: 500;
     }
-    
+
     .form-control {
         width: 100%;
         padding: 0.8rem 1rem;
@@ -71,19 +71,19 @@
         font-size: 1rem;
         transition: border-color 0.3s;
     }
-    
+
     .form-control:focus {
         outline: none;
         border-color: #3498db;
         box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     }
-    
+
     .form-note {
         font-size: 0.9rem;
         color: #95a5a6;
         margin-top: 0.5rem;
     }
-    
+
     .qr-code {
         text-align: center;
         margin: 2rem 0;
@@ -92,22 +92,22 @@
         border-radius: 8px;
         display: inline-block;
     }
-    
+
     .qr-code img {
         width: 150px;
         height: 150px;
         margin-bottom: 1rem;
     }
-    
+
     @media (max-width: 768px) {
         .join-card {
             padding: 1.5rem;
         }
-        
+
         .join-icon {
             font-size: 3rem;
         }
-        
+
         .ticket-number {
             font-size: 2rem;
         }
@@ -119,73 +119,80 @@
         <div class="join-icon">
             <i class="fas fa-ticket-alt"></i>
         </div>
-        
+
         <h1>Join the Queue</h1>
         <p>
-            Get your digital ticket and estimated wait time. 
+            Get your digital ticket and estimated wait time.
             You'll receive SMS notifications when your turn is approaching.
         </p>
-        
+
         <% if (!clinicOpen) { %>
             <div class="message error" style="margin-bottom: 2rem;">
                 <i class="fas fa-exclamation-triangle"></i>
                 Clinic is currently closed. Please visit during working hours.
             </div>
-        <% } %>
-        
-        <div class="next-ticket">
-            <h3>Next Ticket Number</h3>
-            <div class="ticket-number"><%= nextTicket %></div>
-            <p style="color: #7f8c8d;">Estimated wait: 15-30 minutes</p>
-        </div>
-        
-        <form action="/patient/join" method="POST" onsubmit="return validateForm()">
-            <div class="form-group">
-                <label for="phone">
-                    <i class="fas fa-phone"></i> Phone Number (Optional)
-                </label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
-                    class="form-control" 
-                    placeholder="+254 700 000 000"
-                    value="<%= phone %>"
-                >
-                <div class="form-note">
-                    For SMS notifications when your turn is near
+            <% } %>
+
+                <div class="next-ticket">
+                    <h3>Next Ticket Number</h3>
+                    <div class="ticket-number">
+                        <%= nextTicket %>
+                    </div>
+                    <p style="color: #7f8c8d;">Estimated wait: 15-30 minutes</p>
                 </div>
-            </div>
-            
-            <div style="margin: 2rem 0;">
-                <div style="font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
-                    <i class="fas fa-qrcode"></i> Quick Join Options
+
+                <form action="/patient/join" method="POST" onsubmit="return validateForm()">
+                    <div class="form-group">
+                        <label for="phone">
+                            <i class="fas fa-phone"></i> Phone Number (Optional)
+                        </label>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="+254 700 000 000"
+                            value="<%= phone %>">
+                        <div class="form-note">
+                            For SMS notifications when your turn is near
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email Address (Optional)
+                        </label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com">
+                        <div class="form-note">
+                            To prevent duplicate bookings
+                        </div>
+                    </div>
+
+                    <div style="margin: 2rem 0;">
+                        <div style="font-weight: 500; margin-bottom: 0.5rem; color: #2c3e50;">
+                            <i class="fas fa-qrcode"></i> Quick Join Options
+                        </div>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <button type="button" onclick="joinWithoutPhone()" class="btn" style="flex: 1;">
+                                Join Without Phone
+                            </button>
+                            <button type="submit" class="btn btn-primary" style="flex: 1;" <%=!clinicOpen ? 'disabled'
+                                : '' %>>
+                                Join Queue
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="qr-code">
+                    <div
+                        style="width: 150px; height: 150px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border-radius: 8px;">
+                        <div style="text-align: center; color: #7f8c8d;">
+                            <i class="fas fa-qrcode" style="font-size: 4rem;"></i>
+                            <div style="margin-top: 0.5rem;">Scan to Join</div>
+                        </div>
+                    </div>
+                    <p style="color: #7f8c8d; font-size: 0.9rem;">
+                        Scan this QR code with your phone camera to join queue
+                    </p>
                 </div>
-                <div style="display: flex; gap: 1rem; justify-content: center;">
-                    <button type="button" onclick="joinWithoutPhone()" class="btn" style="flex: 1;">
-                        Join Without Phone
-                    </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1;" 
-                        <%= !clinicOpen ? 'disabled' : '' %>>
-                        Join Queue
-                    </button>
-                </div>
-            </div>
-        </form>
-        
-        <div class="qr-code">
-            <div style="width: 150px; height: 150px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border-radius: 8px;">
-                <div style="text-align: center; color: #7f8c8d;">
-                    <i class="fas fa-qrcode" style="font-size: 4rem;"></i>
-                    <div style="margin-top: 0.5rem;">Scan to Join</div>
-                </div>
-            </div>
-            <p style="color: #7f8c8d; font-size: 0.9rem;">
-                Scan this QR code with your phone camera to join queue
-            </p>
-        </div>
     </div>
-    
+
     <div style="text-align: center; margin-top: 2rem; color: #7f8c8d;">
         <i class="fas fa-info-circle"></i>
         Your position in queue will update in real-time. You can check status anytime.
@@ -195,7 +202,7 @@
 <script>
     function validateForm() {
         const phone = document.getElementById('phone').value;
-        
+
         if (phone && phone.length > 0) {
             // Basic phone validation
             const phoneRegex = /^(\+?(\d{1,3}))?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
@@ -204,10 +211,10 @@
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     function joinWithoutPhone() {
         document.getElementById('phone').value = '';
         document.querySelector('form').submit();
