@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History | Clinic Queue System</title>
+    <title>Patient History | Clinic Queue System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -13,13 +13,13 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
+            margin: 0;
         }
 
         .main-content {
             margin-left: 260px;
             padding: 20px;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
         }
 
         .dashboard-header {
@@ -33,11 +33,62 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .mobile-toggle {
-            display: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #2c3e50;
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-filter input {
+            padding: 0.75rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .history-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #2ecc71;
+            color: white;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .service-time {
+            color: #3498db;
+            font-weight: 500;
         }
 
         @media (max-width: 768px) {
@@ -45,8 +96,13 @@
                 margin-left: 0;
             }
 
-            .mobile-toggle {
-                display: block;
+            table {
+                font-size: 0.9rem;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 0.5rem;
             }
         }
     </style>
@@ -54,20 +110,140 @@
 
 <body>
     <%- include('../partials/sidebar', { path: '/staff/history' }) %>
+
         <div class="main-content">
             <div class="dashboard-header">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <i class="fas fa-bars mobile-toggle"
-                        onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
-                    <h2>Patient History</h2>
+                <h2><i class="fas fa-history"></i> Patient History</h2>
+                <button onclick="exportHistory()" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+
+            <div class="filter-section">
+                <div class="date-filter">
+                    <label><strong>Filter by Date:</strong></label>
+                    <input type="date" id="startDate" onchange="loadHistory()">
+                    <span>to</span>
+                    <input type="date" id="endDate" onchange="loadHistory()">
+                    <button onclick="setToday()" class="btn btn-primary">Today</button>
+                    <button onclick="setThisWeek()" class="btn btn-accent">This Week</button>
                 </div>
             </div>
-            <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                <i class="fas fa-history" style="font-size: 3rem; color: #3498db; margin-bottom: 20px;"></i>
-                <h3>History View</h3>
-                <p>Patient service history will be displayed here.</p>
+
+            <div class="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Arrived</th>
+                            <th>Served</th>
+                            <th>Wait Time</th>
+                            <th>Service Time</th>
+                            <th>Staff</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <script>
+            // Set default date to today
+            function setToday() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('startDate').value = today;
+                document.getElementById('endDate').value = today;
+                loadHistory();
+            }
+
+            function setThisWeek() {
+                const today = new Date();
+                const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                document.getElementById('startDate').value = weekStart.toISOString().split('T')[0];
+                document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
+                loadHistory();
+            }
+
+            async function loadHistory() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                try {
+                    let url = '/api/queue/history';
+                    if (startDate && endDate) {
+                        url += `?startDate=${startDate}&endDate=${endDate}`;
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateHistoryTable(data.patients || []);
+                    }
+                } catch (error) {
+                    console.error('Error loading history:', error);
+                    document.getElementById('historyTableBody').innerHTML = `
+                    <tr><td colspan="8" style="text-align: center; color: #e74c3c;">
+                        Error loading history. Please try again.
+                    </td></tr>
+                `;
+                }
+            }
+
+            function updateHistoryTable(patients) {
+                const tbody = document.getElementById('historyTableBody');
+
+                if (patients.length === 0) {
+                    tbody.innerHTML = `
+                    <tr><td colspan="8" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-inbox"></i> No history found for selected dates
+                    </td></tr>
+                `;
+                    return;
+                }
+
+                tbody.innerHTML = patients.map(patient => {
+                    const arrived = new Date(patient.created_at);
+                    const served = patient.served_at ? new Date(patient.served_at) : null;
+                    const waitTime = patient.wait_time_so_far || 0;
+                    const serviceTime = patient.service_time || 0;
+
+                    return `
+                    <tr>
+                        <td><strong>${patient.ticket_number}</strong></td>
+                        <td>${patient.phone || 'N/A'}</td>
+                        <td>${patient.email || 'N/A'}</td>
+                        <td>${arrived.toLocaleTimeString()}</td>
+                        <td>${served ? served.toLocaleTimeString() : 'N/A'}</td>
+                        <td>${waitTime} min</td>
+                        <td class="service-time">${serviceTime} min</td>
+                        <td>${patient.served_by_staff || 'N/A'}</td>
+                    </tr>
+                `;
+                }).join('');
+            }
+
+            function exportHistory() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                let url = '/admin/export?dataType=patients_today&format=csv';
+                if (startDate && endDate) {
+                    url += `&startDate=${startDate}&endDate=${endDate}`;
+                }
+                window.location.href = url;
+            }
+
+            // Load today's history on page load
+            setToday();
+        </script>
 </body>
 
 </html>

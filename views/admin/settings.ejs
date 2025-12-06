@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings | Clinic Queue System</title>
+    <title>Clinic Settings | Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -13,13 +13,13 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
+            margin: 0;
         }
 
         .main-content {
             margin-left: 260px;
             padding: 20px;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
         }
 
         .dashboard-header {
@@ -33,20 +33,65 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .mobile-toggle {
-            display: none;
-            font-size: 1.5rem;
-            cursor: pointer;
+        .settings-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
             color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-help {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
-            }
-
-            .mobile-toggle {
-                display: block;
             }
         }
     </style>
@@ -54,20 +99,127 @@
 
 <body>
     <%- include('../partials/sidebar', { path: '/admin/settings' }) %>
+
         <div class="main-content">
             <div class="dashboard-header">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <i class="fas fa-bars mobile-toggle"
-                        onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
-                    <h2>System Settings</h2>
-                </div>
+                <h2><i class="fas fa-cogs"></i> Clinic Settings</h2>
             </div>
-            <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                <i class="fas fa-cogs" style="font-size: 3rem; color: #3498db; margin-bottom: 20px;"></i>
-                <h3>Settings Coming Soon</h3>
-                <p>System configuration options will be available here.</p>
+
+            <div class="settings-container">
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <!-- Clinic Information -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-hospital"></i> Clinic Information</h3>
+                        <div class="form-group">
+                            <label>Clinic Name *</label>
+                            <input type="text" id="clinicName" name="clinic_name"
+                                value="<%= clinicSettings.clinic_name %>" required>
+                        </div>
+                    </div>
+
+                    <!-- Operating Hours -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-clock"></i> Operating Hours</h3>
+                        <div class="form-group">
+                            <label>Opening Time *</label>
+                            <input type="time" id="openingTime" name="opening_time"
+                                value="<%= clinicSettings.opening_time %>" required>
+                            <div class="form-help">When does the clinic start accepting patients?</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Closing Time *</label>
+                            <input type="time" id="closingTime" name="closing_time"
+                                value="<%= clinicSettings.closing_time %>" required>
+                            <div class="form-help">When does the clinic stop accepting patients?</div>
+                        </div>
+                    </div>
+
+                    <!-- Queue Settings -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-list-ol"></i> Queue Settings</h3>
+                        <div class="form-group">
+                            <label>Average Service Time (minutes) *</label>
+                            <input type="number" id="avgServiceTime" name="avg_service_time"
+                                value="<%= clinicSettings.avg_service_time %>" min="1" max="120" required>
+                            <div class="form-help">Average time to serve one patient (used for wait time estimates)
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Current Queue Number</label>
+                            <input type="number" id="currentQueueNumber"
+                                value="<%= clinicSettings.current_queue_number %>" readonly>
+                            <div class="form-help">This resets automatically at midnight</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                        <button type="button" onclick="resetQueue()" class="btn btn-secondary" style="flex: 1;">
+                            <i class="fas fa-redo"></i> Reset Queue Number
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+
+        <script>
+            async function saveSettings(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const data = {
+                    clinic_name: formData.get('clinic_name'),
+                    opening_time: formData.get('opening_time') + ':00',
+                    closing_time: formData.get('closing_time') + ':00',
+                    avg_service_time: parseInt(formData.get('avg_service_time'))
+                };
+
+                try {
+                    const response = await fetch('/admin/settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Settings saved successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to save settings');
+                }
+            }
+
+            async function resetQueue() {
+                if (!confirm('Are you sure you want to reset the queue number to 100?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/admin/maintenance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'reset_queue' })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Queue number reset successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to reset queue number');
+                }
+            }
+        </script>
 </body>
 
 </html>

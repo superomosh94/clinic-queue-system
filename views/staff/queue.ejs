@@ -13,13 +13,13 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
+            margin: 0;
         }
 
         .main-content {
             margin-left: 260px;
             padding: 20px;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
         }
 
         .dashboard-header {
@@ -33,20 +33,102 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .mobile-toggle {
-            display: none;
-            font-size: 1.5rem;
-            cursor: pointer;
+        .queue-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h4 {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
             color: #2c3e50;
+        }
+
+        .queue-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #3498db;
+            color: white;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-in-progress {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0 0.25rem;
+        }
+
+        .btn-serve {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-no-show {
+            background: #e74c3c;
+            color: white;
         }
 
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
-            }
-
-            .mobile-toggle {
-                display: block;
             }
         }
     </style>
@@ -54,20 +136,141 @@
 
 <body>
     <%- include('../partials/sidebar', { path: '/staff/queue' }) %>
+
         <div class="main-content">
             <div class="dashboard-header">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <i class="fas fa-bars mobile-toggle"
-                        onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
-                    <h2>Queue List</h2>
+                <h2><i class="fas fa-list-ol"></i> Queue List</h2>
+                <button onclick="location.reload()" class="btn btn-primary">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+
+            <div class="queue-stats">
+                <div class="stat-card">
+                    <h4>Waiting</h4>
+                    <div class="number" id="waitingCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>In Progress</h4>
+                    <div class="number" id="progressCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Served Today</h4>
+                    <div class="number" id="servedCount">0</div>
                 </div>
             </div>
-            <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                <i class="fas fa-list-ol" style="font-size: 3rem; color: #3498db; margin-bottom: 20px;"></i>
-                <h3>Queue List View</h3>
-                <p>Full queue management list will be displayed here.</p>
+
+            <div class="queue-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Wait Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading queue data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <script>
+            // Fetch and display queue data
+            async function loadQueueData() {
+                try {
+                    const response = await fetch('/api/queue/waiting');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateQueueTable(data.patients || []);
+                    }
+                } catch (error) {
+                    console.error('Error loading queue:', error);
+                    document.getElementById('queueTableBody').innerHTML = `
+                    <tr><td colspan="6" style="text-align: center; color: #e74c3c;">
+                        Error loading queue data. Please refresh the page.
+                    </td></tr>
+                `;
+                }
+            }
+
+            function updateQueueTable(patients) {
+                const tbody = document.getElementById('queueTableBody');
+
+                if (patients.length === 0) {
+                    tbody.innerHTML = `
+                    <tr><td colspan="6" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-inbox"></i> No patients in queue
+                    </td></tr>
+                `;
+                    return;
+                }
+
+                tbody.innerHTML = patients.map(patient => `
+                <tr>
+                    <td><strong>${patient.ticket_number}</strong></td>
+                    <td>${patient.phone || 'N/A'}</td>
+                    <td>${patient.email || 'N/A'}</td>
+                    <td><span class="status-badge status-${patient.status}">${patient.status}</span></td>
+                    <td>${patient.wait_time_so_far || 0} min</td>
+                    <td>
+                        ${patient.status === 'waiting' ? `
+                            <button class="action-btn btn-serve" onclick="updateStatus('${patient.ticket_number}', 'served')">
+                                <i class="fas fa-check"></i> Serve
+                            </button>
+                            <button class="action-btn btn-no-show" onclick="updateStatus('${patient.ticket_number}', 'no-show')">
+                                <i class="fas fa-times"></i> No Show
+                            </button>
+                        ` : `
+                            <button class="action-btn btn-serve" onclick="updateStatus('${patient.ticket_number}', 'served')">
+                                <i class="fas fa-check"></i> Complete
+                            </button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+
+                // Update stats
+                document.getElementById('waitingCount').textContent = patients.filter(p => p.status === 'waiting').length;
+                document.getElementById('progressCount').textContent = patients.filter(p => p.status === 'in-progress').length;
+            }
+
+            async function updateStatus(ticketNumber, status) {
+                try {
+                    const response = await fetch('/staff/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ticketNumber, status })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(`Patient ${ticketNumber} marked as ${status}`);
+                        loadQueueData();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                    alert('Failed to update patient status');
+                }
+            }
+
+            // Load data on page load
+            loadQueueData();
+
+            // Refresh every 30 seconds
+            setInterval(loadQueueData, 30000);
+        </script>
 </body>
 
 </html>

@@ -4,9 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <%= title || 'Staff Management' %> | Clinic Queue System
-    </title>
+    <title>Staff Management | Clinic Queue System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -15,13 +13,13 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Poppins', sans-serif;
+            margin: 0;
         }
 
         .main-content {
             margin-left: 260px;
             padding: 20px;
             min-height: 100vh;
-            transition: margin-left 0.3s ease;
         }
 
         .dashboard-header {
@@ -52,151 +50,345 @@
         }
 
         .staff-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .staff-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-active {
-            background-color: #e8f6f3;
-            color: #2ecc71;
-        }
-
-        .status-inactive {
-            background-color: #fef9e7;
-            color: #f39c12;
-        }
-
-        .btn-add {
             background-color: #3498db;
             color: white;
-            padding: 10px 20px;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border: none;
             border-radius: 5px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-            transition: background 0.3s;
-        }
-
-        .btn-add:hover {
-            background-color: #2980b9;
-        }
-
-        .mobile-toggle {
-            display: none;
-            font-size: 1.5rem;
             cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #95a5a6;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
             color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
         }
 
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
             }
-
-            .mobile-toggle {
-                display: block;
-            }
-
-            .staff-table {
-                display: block;
-                overflow-x: auto;
-            }
         }
     </style>
 </head>
 
 <body>
-
-    <!-- Include Sidebar Partial -->
     <%- include('../partials/sidebar', { path: '/admin/staff' }) %>
 
         <div class="main-content">
             <div class="dashboard-header">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <i class="fas fa-bars mobile-toggle"
-                        onclick="document.querySelector('.sidebar').classList.toggle('active')"></i>
-                    <h2>Staff Management</h2>
-                </div>
-                <a href="#" class="btn-add" onclick="alert('Add Staff Modal would open here')">
-                    <i class="fas fa-plus"></i> Add New Staff
-                </a>
+                <h2><i class="fas fa-users-cog"></i> Staff Management</h2>
+                <button onclick="openAddModal()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Staff
+                </button>
             </div>
 
-            <div class="staff-list-container">
-                <% if (typeof staffList !=='undefined' && staffList.length> 0) { %>
-                    <table class="staff-table">
-                        <thead>
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (staffList && staffList.length> 0) { %>
+                        <% staffList.forEach(staff=> { %>
                             <tr>
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <td>
+                                    <%= staff.id %>
+                                </td>
+                                <td>
+                                    <%= staff.full_name %>
+                                </td>
+                                <td>
+                                    <%= staff.username %>
+                                </td>
+                                <td>
+                                    <%= staff.role %>
+                                </td>
+                                <td>
+                                    <%= staff.phone || staff.email || 'N/A' %>
+                                </td>
+                                <td>
+                                    <% if (staff.is_active !==0) { %>
+                                        <span style="color: #2ecc71;">Active</span>
+                                        <% } else { %>
+                                            <span style="color: #e74c3c;">Inactive</span>
+                                            <% } %>
+                                </td>
+                                <td>
+                                    <button class="action-btn btn-edit"
+                                        onclick='openEditModal(<%= JSON.stringify(staff) %>)'>
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="action-btn btn-delete"
+                                        onclick="openDeleteModal(<%= staff.id %>, '<%= staff.full_name %>')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% staffList.forEach(staff=> { %>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <div
-                                                style="width: 30px; height: 30px; background: #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                                                <%= staff.full_name.charAt(0).toUpperCase() %>
-                                            </div>
-                                            <%= staff.full_name %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <%= staff.username %>
-                                    </td>
-                                    <td><span style="text-transform: capitalize;">
-                                            <%= staff.role %>
-                                        </span></td>
-                                    <td>
-                                        <span
-                                            class="status-badge <%= staff.is_active ? 'status-active' : 'status-inactive' %>">
-                                            <%= staff.is_active ? 'Active' : 'Inactive' %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            style="border: none; background: none; color: #3498db; cursor: pointer;">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button
-                                            style="border: none; background: none; color: #e74c3c; cursor: pointer; margin-left: 10px;">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                        </tbody>
-                    </table>
-                    <% } else { %>
-                        <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                            <i class="fas fa-users-slash"
-                                style="font-size: 3rem; color: #bdc3c7; margin-bottom: 20px;"></i>
-                            <h3>No Staff Found</h3>
-                            <p>Get started by adding a new staff member.</p>
-                        </div>
-                        <% } %>
+                            <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                                            No staff members found
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add/Edit Staff Modal -->
+        <div id="staffModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Add New Staff</h3>
+                    <span class="close" onclick="closeModals()">&times;</span>
+                </div>
+                <form id="staffForm" onsubmit="handleStaffSubmit(event)">
+                    <input type="hidden" id="staffId" name="staffId">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Username *</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password <span id="passwordNote">(Leave blank to keep current)</span></label>
+                        <input type="password" id="password" name="password">
+                    </div>
+                    <div class="form-group">
+                        <label>Role *</label>
+                        <select id="role" name="role" required>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Save</button>
+                        <button type="button" onclick="closeModals()" class="btn btn-secondary"
+                            style="flex: 1;">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
 
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3 style="color: #e74c3c;">Confirm Delete</h3>
+                    <span class="close" onclick="closeModals()">&times;</span>
+                </div>
+                <p>Are you sure you want to delete <strong id="deleteStaffName"></strong>?</p>
+                <p style="color: #7f8c8d; font-size: 0.9rem;">This action cannot be undone.</p>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button onclick="confirmDelete()" class="btn"
+                        style="flex: 1; background: #e74c3c; color: white;">Delete</button>
+                    <button onclick="closeModals()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let currentDeleteId = null;
+
+            function openAddModal() {
+                document.getElementById('modalTitle').textContent = 'Add New Staff';
+                document.getElementById('staffForm').reset();
+                document.getElementById('staffId').value = '';
+                document.getElementById('passwordNote').style.display = 'none';
+                document.getElementById('password').required = true;
+                document.getElementById('staffModal').style.display = 'block';
+            }
+
+            function openEditModal(staff) {
+                document.getElementById('modalTitle').textContent = 'Edit Staff';
+                document.getElementById('staffId').value = staff.id;
+                document.getElementById('fullName').value = staff.full_name;
+                document.getElementById('username').value = staff.username;
+                document.getElementById('role').value = staff.role;
+                document.getElementById('phone').value = staff.phone || '';
+                document.getElementById('email').value = staff.email || '';
+                document.getElementById('passwordNote').style.display = 'inline';
+                document.getElementById('password').required = false;
+                document.getElementById('staffModal').style.display = 'block';
+            }
+
+            function openDeleteModal(id, name) {
+                currentDeleteId = id;
+                document.getElementById('deleteStaffName').textContent = name;
+                document.getElementById('deleteModal').style.display = 'block';
+            }
+
+            function closeModals() {
+                document.getElementById('staffModal').style.display = 'none';
+                document.getElementById('deleteModal').style.display = 'none';
+                currentDeleteId = null;
+            }
+
+            async function handleStaffSubmit(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const data = {
+                    full_name: formData.get('fullName'),
+                    username: formData.get('username'),
+                    role: formData.get('role'),
+                    phone: formData.get('phone'),
+                    email: formData.get('email')
+                };
+
+                if (formData.get('password')) {
+                    data.password = formData.get('password');
+                }
+
+                const staffId = formData.get('staffId');
+                const url = staffId ? `/admin/staff/${staffId}` : '/admin/staff';
+                const method = staffId ? 'PUT' : 'POST';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(staffId ? 'Staff updated successfully!' : 'Staff created successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to save staff member');
+                }
+            }
+
+            async function confirmDelete() {
+                if (!currentDeleteId) return;
+
+                try {
+                    const response = await fetch(`/admin/staff/${currentDeleteId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Staff deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete staff member');
+                }
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                const staffModal = document.getElementById('staffModal');
+                const deleteModal = document.getElementById('deleteModal');
+                if (event.target == staffModal || event.target == deleteModal) {
+                    closeModals();
+                }
+            }
+        </script>
 </body>
 
 </html>
